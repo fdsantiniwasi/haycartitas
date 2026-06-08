@@ -1,11 +1,11 @@
-const SUPABASE_URL = "https://ajczyfoyrmrklbeixdum.supabase.coL";
+const SUPABASE_URL = "https://ajczyfoyrmrklbeixdum.supabase.co";
 const SUPABASE_KEY = "sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L";
 
 let supabaseClient = null;
 
 if (
-  SUPABASE_URL !== "https://ajczyfoyrmrklbeixdum.supabase.coL" &&
-  SUPABASE_KEY !== "sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L"
+  SUPABASE_URL !== "PEGA_AQUI_TU_SUPABASE_URL" &&
+  SUPABASE_KEY !== "PEGA_AQUI_TU_PUBLISHABLE_KEY"
 ) {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
