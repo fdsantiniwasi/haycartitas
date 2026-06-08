@@ -1,11 +1,11 @@
-const SUPABASE_URL = https://ajczyfoyrmrklbeixdum.supabase.coL;
-const SUPABASE_KEY = sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L;
+const SUPABASE_URL = "https://ajczyfoyrmrklbeixdum.supabase.coL";
+const SUPABASE_KEY = "sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L";
 
 let supabaseClient = null;
 
 if (
-  SUPABASE_URL !== https://ajczyfoyrmrklbeixdum.supabase.coL &&
-  SUPABASE_KEY !== sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L
+  SUPABASE_URL !== "https://ajczyfoyrmrklbeixdum.supabase.coL" &&
+  SUPABASE_KEY !== "sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L"
 ) {
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
