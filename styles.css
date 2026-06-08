@@ -1,0 +1,476 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f6f6f6;
+  color: #222;
+}
+
+.encabezado {
+  background: #ff7a00;
+  color: white;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  text-align: center;
+  min-height: 130px;
+}
+
+.logo-header {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 125px;
+  height: auto;
+  border-radius: 14px;
+  background: white;
+  padding: 6px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.texto-header {
+  max-width: 650px;
+}
+
+.encabezado h1 {
+  margin: 0;
+  font-size: 42px;
+}
+
+.encabezado p {
+  margin-top: 8px;
+  font-size: 18px;
+}
+
+.contenedor {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.tarjeta-resumen {
+  background: white;
+  border-radius: 16px;
+  padding: 18px 10px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.tarjeta-resumen span {
+  display: block;
+  font-size: 30px;
+  font-weight: bold;
+  color: #ff7a00;
+}
+
+.tarjeta-resumen p {
+  margin: 6px 0 0 0;
+  font-size: 14px;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+button {
+  background: #ff7a00;
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #e86d00;
+}
+
+.boton-secundario {
+  background: #777;
+}
+
+.boton-secundario:hover {
+  background: #555;
+}
+
+.boton-confiables {
+  background: #6c4ab6;
+}
+
+.boton-confiables:hover {
+  background: #573996;
+}
+
+.boton-mapa {
+  background: #004b9b;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.boton-mapa:hover {
+  background: #003a78;
+}
+
+.busqueda {
+  margin-bottom: 24px;
+}
+
+.busqueda input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.mapa {
+  width: 100%;
+  height: 420px;
+  border-radius: 18px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.lista-tiendas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.tarjeta-tienda {
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.tarjeta-tienda h3 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+}
+
+.tarjeta-tienda p {
+  margin: 6px 0;
+}
+
+.estado {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.si_hay {
+  background: #d7f8df;
+  color: #167a2f;
+}
+
+.se_acabaron {
+  background: #ffe0e0;
+  color: #a10000;
+}
+
+.no_confirmado {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.proximamente {
+  background: #dcecff;
+  color: #004b9b;
+}
+
+.boton-reporte {
+  margin-top: 12px;
+  background: #222;
+}
+
+.boton-reporte:hover {
+  background: #444;
+}
+
+.botones-tienda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.boton-ver-mapa {
+  background: #004b9b;
+}
+
+.boton-ver-mapa:hover {
+  background: #003a78;
+}
+
+.boton-como-llegar {
+  background: #167a2f;
+}
+
+.boton-como-llegar:hover {
+  background: #0f5d22;
+}
+
+.boton-eliminar {
+  background: #b00020;
+}
+
+.boton-eliminar:hover {
+  background: #870018;
+}
+
+.boton-historial {
+  background: #6c4ab6;
+  margin-top: 10px;
+}
+
+.boton-historial:hover {
+  background: #573996;
+}
+
+.historial-reportes {
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 14px;
+}
+
+.historial-reportes h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.historial-reportes ul {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.historial-reportes li {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.texto-reporte {
+  display: block;
+}
+
+.meta-reporte {
+  display: block;
+  color: #666;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.confianza-reporte {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.contadores-confianza {
+  color: #555;
+  font-size: 13px;
+}
+
+.etiqueta-confianza {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 6px;
+  margin-right: 6px;
+}
+
+.etiqueta-confiable {
+  background: #d7f8df;
+  color: #167a2f;
+}
+
+.etiqueta-desactualizada {
+  background: #ffe0e0;
+  color: #a10000;
+}
+
+.boton-confirmar-reporte {
+  background: #167a2f;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.boton-confirmar-reporte:hover {
+  background: #0f5d22;
+}
+
+.boton-desactualizado-reporte {
+  background: #b00020;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.boton-desactualizado-reporte:hover {
+  background: #870018;
+}
+
+.formulario-reporte,
+.formulario-agregar {
+  background: white;
+  margin-top: 28px;
+  padding: 24px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.formulario-agregar {
+  margin-bottom: 40px;
+}
+
+.oculto {
+  display: none;
+}
+
+.nombre-tienda-reporte {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ff7a00;
+}
+
+.formulario-reporte label,
+.formulario-agregar label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.formulario-reporte select,
+.formulario-reporte textarea,
+.formulario-reporte input,
+.formulario-agregar select,
+.formulario-agregar textarea,
+.formulario-agregar input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.formulario-reporte textarea,
+.formulario-agregar textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.botones-formulario {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.formulario-agregar button {
+  margin-top: 18px;
+}
+
+.caja-ubicacion {
+  background: #fff3cd;
+  border: 1px solid #ffdd77;
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 18px;
+}
+
+.caja-ubicacion p {
+  margin: 6px 0;
+}
+
+.marcador-personalizado {
+  background: transparent;
+  border: none;
+}
+
+.pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.pin::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin: 5px;
+  background: white;
+  position: absolute;
+  border-radius: 50%;
+}
+
+.pin-green {
+  background: #1fae4b;
+}
+
+.pin-red {
+  background: #d62828;
+}
+
+.pin-orange {
+  background: #ffb000;
+}
+
+.pin-blue {
+  background: #0077cc;
+}
+
+.pin-gray {
+  background: #777;
+}
+
+@media (max-width: 700px) {
+  .resumen {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .encabezado {
+    flex-direction: column;
+    padding: 24px 20px;
+    min-height: auto;
+  }
+
+  .logo-header {
+    position: static;
+    transform: none;
+    width: 140px;
+    margin-bottom: 12px;
+  }
+
+  .encabezado h1 {
+    font-size: 34px;
+  }
+
+  .mapa {
+    height: 360px;
+  }
+}

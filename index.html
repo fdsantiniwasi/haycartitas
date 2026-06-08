@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Hay Cartitas</title>
+
+  <link 
+    rel="stylesheet" 
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="encabezado">
+    <img 
+      src="logo.png" 
+      alt="Logo Hay Cartitas" 
+      class="logo-header"
+    />
+
+    <div class="texto-header">
+      <h1>Hay Cartitas</h1>
+      <p>Encuentra dónde hay cartitas del Mundial cerca de ti.</p>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    <section class="resumen">
+      <div class="tarjeta-resumen">
+        <span id="total-tiendas">0</span>
+        <p>Total tiendas</p>
+      </div>
+
+      <div class="tarjeta-resumen">
+        <span id="total-si-hay">0</span>
+        <p>Sí hay</p>
+      </div>
+
+      <div class="tarjeta-resumen">
+        <span id="total-se-acabaron">0</span>
+        <p>Se acabaron</p>
+      </div>
+
+      <div class="tarjeta-resumen">
+        <span id="total-no-confirmado">0</span>
+        <p>No confirmado</p>
+      </div>
+
+      <div class="tarjeta-resumen">
+        <span id="total-proximamente">0</span>
+        <p>Próximamente</p>
+      </div>
+    </section>
+
+    <section class="acciones">
+      <button onclick="mostrarTodas()">Todas</button>
+      <button onclick="filtrarTiendas('si_hay')">Sí hay</button>
+      <button onclick="filtrarTiendas('se_acabaron')">Se acabaron</button>
+      <button onclick="filtrarTiendas('no_confirmado')">No confirmado</button>
+      <button onclick="filtrarTiendas('proximamente')">Próximamente</button>
+
+      <button class="boton-confiables" onclick="filtrarTiendasConReportesConfiables()">
+        Reportes confiables
+      </button>
+
+      <button class="boton-secundario" onclick="borrarTiendasGuardadas()">Reiniciar datos</button>
+    </section>
+
+    <section class="busqueda">
+      <input 
+        type="text" 
+        id="buscador" 
+        placeholder="Buscar tienda, colonia o tipo..."
+        oninput="buscarTiendas()"
+      />
+    </section>
+
+    <section>
+      <h2>Mapa de tiendas en Navojoa</h2>
+      <div id="mapa" class="mapa"></div>
+    </section>
+
+    <section>
+      <h2>Tiendas en Navojoa</h2>
+      <div id="lista-tiendas" class="lista-tiendas"></div>
+    </section>
+
+    <section id="formulario-reporte" class="formulario-reporte oculto">
+      <h2>Reportar disponibilidad</h2>
+
+      <p id="nombre-tienda-reporte" class="nombre-tienda-reporte"></p>
+
+      <label for="estado-reporte">Estado:</label>
+      <select id="estado-reporte">
+        <option value="si_hay">Sí hay</option>
+        <option value="se_acabaron">Se acabaron</option>
+        <option value="no_confirmado">No confirmado</option>
+        <option value="proximamente">Próximamente</option>
+      </select>
+
+      <label for="comentario-reporte">Comentario:</label>
+      <textarea 
+        id="comentario-reporte" 
+        placeholder="Ejemplo: Había sobres en caja, se acabaron, llegan mañana..."
+      ></textarea>
+
+      <label for="usuario-reporte">Tu nombre, opcional:</label>
+      <input 
+        id="usuario-reporte" 
+        type="text" 
+        placeholder="Ejemplo: Fernando"
+      />
+
+      <div class="botones-formulario">
+        <button onclick="guardarReporte()">Guardar reporte</button>
+        <button class="boton-secundario" onclick="cancelarReporte()">Cancelar</button>
+      </div>
+    </section>
+
+    <section id="formulario-agregar" class="formulario-agregar">
+      <h2>Agregar tienda nueva</h2>
+
+      <label for="nombre-nueva-tienda">Nombre de la tienda:</label>
+      <input 
+        id="nombre-nueva-tienda" 
+        type="text" 
+        placeholder="Ejemplo: Abarrotes La Esquina"
+      />
+
+      <label for="tipo-nueva-tienda">Tipo de tienda:</label>
+      <select id="tipo-nueva-tienda">
+        <option value="OXXO">OXXO</option>
+        <option value="Farmacia">Farmacia</option>
+        <option value="Walmart">Walmart</option>
+        <option value="Supermercado">Supermercado</option>
+        <option value="Abarrotes">Abarrotes</option>
+        <option value="Papelería">Papelería</option>
+        <option value="Otra">Otra</option>
+      </select>
+
+      <label for="zona-nueva-tienda">Zona o colonia:</label>
+      <input 
+        id="zona-nueva-tienda" 
+        type="text" 
+        placeholder="Ejemplo: Centro, Juárez, Deportiva, Pesqueira..."
+      />
+
+      <label for="estado-nueva-tienda">Estado inicial:</label>
+      <select id="estado-nueva-tienda">
+        <option value="si_hay">Sí hay</option>
+        <option value="se_acabaron">Se acabaron</option>
+        <option value="no_confirmado">No confirmado</option>
+        <option value="proximamente">Próximamente</option>
+      </select>
+
+      <label for="comentario-nueva-tienda">Comentario:</label>
+      <textarea 
+        id="comentario-nueva-tienda" 
+        placeholder="Ejemplo: Me dijeron que llegan mañana, vi sobres en caja, etc."
+      ></textarea>
+
+      <label for="usuario-nueva-tienda">Tu nombre, opcional:</label>
+      <input 
+        id="usuario-nueva-tienda" 
+        type="text" 
+        placeholder="Ejemplo: Fernando"
+      />
+
+      <div class="caja-ubicacion">
+        <p><strong>Ubicación de la tienda:</strong></p>
+        <p>Presiona el botón y después haz clic en el mapa donde está la tienda.</p>
+
+        <button class="boton-mapa" onclick="activarSeleccionUbicacion()">
+          Elegir ubicación en el mapa
+        </button>
+
+        <p id="ubicacion-seleccionada">Todavía no has seleccionado ubicación.</p>
+      </div>
+
+      <button onclick="agregarNuevaTienda()">Agregar tienda</button>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
