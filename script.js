@@ -68,6 +68,19 @@ function obtenerTiempoRelativo(fechaISO) {
   return "Hace " + diferenciaDias + " día" + (diferenciaDias === 1 ? "" : "s");
 }
 
+function ordenarReportes(reportes) {
+  return reportes.sort(function(a, b) {
+    const fechaA = new Date(a.fechaISO || a.created_at || 0).getTime();
+    const fechaB = new Date(b.fechaISO || b.created_at || 0).getTime();
+
+    if (fechaB !== fechaA) {
+      return fechaB - fechaA;
+    }
+
+    return String(b.id).localeCompare(String(a.id));
+  });
+}
+
 function convertirDatosDeSupabase(tiendasData, reportesData) {
   return tiendasData.map(function(tienda) {
     const reportesDeLaTienda = reportesData
@@ -85,6 +98,8 @@ function convertirDatosDeSupabase(tiendasData, reportesData) {
           desactualizado: reporte.desactualizado || 0
         };
       });
+
+    ordenarReportes(reportesDeLaTienda);
 
     return {
       id: tienda.id,
@@ -141,7 +156,8 @@ async function cargarTiendasDesdeSupabase() {
   const resultadoReportes = await supabaseClient
     .from("reportes")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
 
   if (resultadoReportes.error) {
     console.error(resultadoReportes.error);
@@ -892,13 +908,18 @@ function eliminarTienda(idTienda) {
   alert("Por seguridad, borrar tiendas desde la app pública está desactivado en Supabase. Más adelante haremos modo administrador.");
 }
 
-function agregarNuevaTienda() {
+async function agregarNuevaTienda() {
   const nombreInput = document.getElementById("nombre-nueva-tienda");
   const tipoInput = document.getElementById("tipo-nueva-tienda");
   const zonaInput = document.getElementById("zona-nueva-tienda");
   const estadoInput = document.getElementById("estado-nueva-tienda");
   const comentarioInput = document.getElementById("comentario-nueva-tienda");
   const usuarioInput = document.getElementById("usuario-nueva-tienda");
+
+  if (!supabaseClient) {
+    alert("Supabase no está configurado.");
+    return;
+  }
 
   if (!nombreInput || !tipoInput || !zonaInput || !estadoInput || !comentarioInput || !usuarioInput) {
     alert("Hay un problema: falta un campo del formulario en el HTML.");
@@ -950,39 +971,54 @@ function agregarNuevaTienda() {
     usuarioFinal = usuario;
   }
 
-  const ahoraISO = new Date().toISOString();
+  const fechaActual = new Date().toISOString();
 
-  const nuevaTienda = {
-    id: generarId(),
-    nombre: nombre,
-    tipo: tipo,
-    zona: zona,
-    estado: estado,
-    ultimoReporte: obtenerTiempoRelativo(ahoraISO),
-    comentario: comentarioFinal,
-    lat: ubicacionNuevaTienda.lat,
-    lng: ubicacionNuevaTienda.lng,
-    fechaUltimoReporteISO: ahoraISO,
-    reportes: [
-      {
-        id: generarId(),
-        estado: estado,
-        comentario: comentarioFinal,
-        usuario: usuarioFinal,
-        fechaISO: ahoraISO,
-        confirmaciones: 0,
-        desactualizado: 0
-      }
-    ]
-  };
+  const resultadoTienda = await supabaseClient
+    .from("tiendas")
+    .insert({
+      nombre: nombre,
+      tipo: tipo,
+      zona: zona,
+      estado: estado,
+      comentario: comentarioFinal,
+      lat: ubicacionNuevaTienda.lat,
+      lng: ubicacionNuevaTienda.lng,
+      fecha_ultimo_reporte: fechaActual,
+      created_at: fechaActual
+    })
+    .select()
+    .single();
 
-  tiendas.push(nuevaTienda);
+  if (resultadoTienda.error) {
+    console.error(resultadoTienda.error);
+    alert("No se pudo guardar la tienda en Supabase.");
+    return;
+  }
 
-  guardarTiendasEnNavegador();
-  mostrarTiendas(tiendas);
+  const nuevaTienda = resultadoTienda.data;
+
+  const resultadoReporte = await supabaseClient
+    .from("reportes")
+    .insert({
+      tienda_id: nuevaTienda.id,
+      estado: estado,
+      comentario: comentarioFinal,
+      usuario: usuarioFinal,
+      confirmaciones: 0,
+      desactualizado: 0,
+      created_at: fechaActual
+    });
+
+  if (resultadoReporte.error) {
+    console.error(resultadoReporte.error);
+    alert("La tienda se guardó, pero no se pudo crear su primer reporte.");
+    return;
+  }
+
+  await cargarTiendasDesdeSupabase();
   limpiarFormularioNuevaTienda();
 
-  alert("Tienda agregada solo en pantalla por ahora. En una clase próxima la guardaremos en Supabase.");
+  alert("Tienda nueva guardada correctamente en Supabase.");
 }
 
 function limpiarFormularioNuevaTienda() {
