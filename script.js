@@ -163,7 +163,7 @@ async function cargarTiendasDesdeSupabase() {
 }
 
 function guardarTiendasEnNavegador() {
-  console.log("Modo Supabase: en esta clase todavía no guardamos cambios en la base de datos.");
+  console.log("Modo Supabase: ya no usamos localStorage para guardar tiendas.");
 }
 
 async function borrarTiendasGuardadas() {
@@ -422,7 +422,7 @@ function confirmarReporte(idTienda, idReporte) {
   guardarTiendasEnNavegador();
   mostrarTiendas(tiendas);
 
-  alert("Confirmación guardada solo en pantalla por ahora. En la siguiente clase la guardaremos en Supabase.");
+  alert("Confirmación guardada solo en pantalla por ahora. En una clase próxima la guardaremos en Supabase.");
 }
 
 function marcarReporteDesactualizado(idTienda, idReporte) {
@@ -447,7 +447,7 @@ function marcarReporteDesactualizado(idTienda, idReporte) {
   guardarTiendasEnNavegador();
   mostrarTiendas(tiendas);
 
-  alert("Voto guardado solo en pantalla por ahora. En la siguiente clase lo guardaremos en Supabase.");
+  alert("Voto guardado solo en pantalla por ahora. En una clase próxima lo guardaremos en Supabase.");
 }
 
 function crearHistorialHTML(tienda) {
@@ -650,9 +650,14 @@ function reportarPorId(idTienda) {
   });
 }
 
-function guardarReporte() {
+async function guardarReporte() {
   if (!tiendaSeleccionada) {
     alert("Primero selecciona una tienda.");
+    return;
+  }
+
+  if (!supabaseClient) {
+    alert("Supabase no está configurado.");
     return;
   }
 
@@ -674,34 +679,47 @@ function guardarReporte() {
     usuarioFinal = usuario;
   }
 
-  const ahoraISO = new Date().toISOString();
+  const fechaReporte = new Date().toISOString();
 
-  const nuevoReporte = {
-    id: generarId(),
-    estado: nuevoEstado,
-    comentario: comentarioFinal,
-    usuario: usuarioFinal,
-    fechaISO: ahoraISO,
-    confirmaciones: 0,
-    desactualizado: 0
-  };
+  const resultadoReporte = await supabaseClient
+    .from("reportes")
+    .insert({
+      tienda_id: tiendaSeleccionada.id,
+      estado: nuevoEstado,
+      comentario: comentarioFinal,
+      usuario: usuarioFinal,
+      confirmaciones: 0,
+      desactualizado: 0,
+      created_at: fechaReporte
+    })
+    .select()
+    .single();
 
-  if (!tiendaSeleccionada.reportes) {
-    tiendaSeleccionada.reportes = [];
+  if (resultadoReporte.error) {
+    console.error(resultadoReporte.error);
+    alert("No se pudo guardar el reporte en Supabase.");
+    return;
   }
 
-  tiendaSeleccionada.reportes.unshift(nuevoReporte);
+  const resultadoTienda = await supabaseClient
+    .from("tiendas")
+    .update({
+      estado: nuevoEstado,
+      comentario: comentarioFinal,
+      fecha_ultimo_reporte: fechaReporte
+    })
+    .eq("id", tiendaSeleccionada.id);
 
-  tiendaSeleccionada.estado = nuevoEstado;
-  tiendaSeleccionada.comentario = comentarioFinal;
-  tiendaSeleccionada.fechaUltimoReporteISO = ahoraISO;
-  tiendaSeleccionada.ultimoReporte = obtenerTiempoRelativo(ahoraISO);
+  if (resultadoTienda.error) {
+    console.error(resultadoTienda.error);
+    alert("El reporte se guardó, pero no se pudo actualizar la tienda.");
+    return;
+  }
 
-  guardarTiendasEnNavegador();
-  mostrarTiendas(tiendas);
+  await cargarTiendasDesdeSupabase();
   cancelarReporte();
 
-  alert("Reporte guardado solo en pantalla por ahora. En la siguiente clase lo guardaremos en Supabase.");
+  alert("Reporte guardado correctamente en Supabase.");
 }
 
 function cancelarReporte() {
@@ -852,7 +870,7 @@ function agregarNuevaTienda() {
   mostrarTiendas(tiendas);
   limpiarFormularioNuevaTienda();
 
-  alert("Tienda agregada solo en pantalla por ahora. En la siguiente clase la guardaremos en Supabase.");
+  alert("Tienda agregada solo en pantalla por ahora. En una clase próxima la guardaremos en Supabase.");
 }
 
 function limpiarFormularioNuevaTienda() {
