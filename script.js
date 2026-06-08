@@ -197,14 +197,166 @@ function actualizarTiemposDeReportes() {
   });
 }
 
-function actualizarEstadoTiendaSegunConfianza(tienda, reporte) {
-  const esReporteMasReciente = tienda.reportes && tienda.reportes[0] && String(tienda.reportes[0].id) === String(reporte.id);
+function pedirNombreParaVotar() {
+  const nombre = prompt("Escribe tu nombre para registrar tu voto:");
 
-  if (esReporteMasReciente && reporte.desactualizado >= 3) {
-    tienda.estado = "no_confirmado";
-    tienda.comentario = "El reporte más reciente fue marcado como probablemente desactualizado.";
-    tienda.fechaUltimoReporteISO = new Date().toISOString();
-    tienda.ultimoReporte = obtenerTiempoRelativo(tienda.fechaUltimoReporteISO);
+  if (!nombre) {
+    return null;
+  }
+
+  const nombreLimpio = nombre.trim();
+
+  if (nombreLimpio === "") {
+    return null;
+  }
+
+  return nombreLimpio;
+}
+
+function detectarErrorDeVotoDuplicado(error) {
+  if (!error) {
+    return false;
+  }
+
+  if (error.code === "23505") {
+    return true;
+  }
+
+  if (error.message && error.message.toLowerCase().includes("duplicate")) {
+    return true;
+  }
+
+  return false;
+}
+
+async function actualizarContadorReporteEnSupabase(idReporte, campo, nuevoValor) {
+  const datosActualizar = {};
+  datosActualizar[campo] = nuevoValor;
+
+  const resultado = await supabaseClient
+    .from("reportes")
+    .update(datosActualizar)
+    .eq("id", idReporte);
+
+  if (resultado.error) {
+    console.error(resultado.error);
+    alert("El voto se guardó, pero no se pudo actualizar el contador del reporte.");
+    return false;
+  }
+
+  return true;
+}
+
+async function actualizarTiendaDesactualizadaEnSupabase(tienda) {
+  const fechaActual = new Date().toISOString();
+
+  const resultado = await supabaseClient
+    .from("tiendas")
+    .update({
+      estado: "no_confirmado",
+      comentario: "El reporte más reciente fue marcado como probablemente desactualizado.",
+      fecha_ultimo_reporte: fechaActual
+    })
+    .eq("id", tienda.id);
+
+  if (resultado.error) {
+    console.error(resultado.error);
+    alert("El reporte fue marcado como desactualizado, pero no se pudo actualizar la tienda.");
+    return false;
+  }
+
+  return true;
+}
+
+async function guardarVotoReporteEnSupabase(idTienda, idReporte, tipoVoto) {
+  if (!supabaseClient) {
+    alert("Supabase no está configurado.");
+    return;
+  }
+
+  const tienda = buscarTiendaPorId(idTienda);
+
+  if (!tienda) {
+    alert("No encontramos esa tienda.");
+    return;
+  }
+
+  const reporte = buscarReportePorId(tienda, idReporte);
+
+  if (!reporte) {
+    alert("No encontramos ese reporte.");
+    return;
+  }
+
+  const usuarioNombre = pedirNombreParaVotar();
+
+  if (!usuarioNombre) {
+    alert("Para votar necesitas escribir tu nombre.");
+    return;
+  }
+
+  const resultadoVoto = await supabaseClient
+    .from("votos_reportes")
+    .insert({
+      reporte_id: idReporte,
+      usuario_nombre: usuarioNombre,
+      tipo_voto: tipoVoto
+    });
+
+  if (resultadoVoto.error) {
+    console.error(resultadoVoto.error);
+
+    if (detectarErrorDeVotoDuplicado(resultadoVoto.error)) {
+      alert("Ese nombre ya votó en este reporte. Cada nombre solo puede votar una vez por reporte.");
+      return;
+    }
+
+    alert("No se pudo guardar el voto en Supabase.");
+    return;
+  }
+
+  let campoActualizar = "";
+  let nuevoValor = 0;
+
+  if (tipoVoto === "confirmar") {
+    campoActualizar = "confirmaciones";
+    nuevoValor = reporte.confirmaciones + 1;
+  }
+
+  if (tipoVoto === "ya_no_aplica") {
+    campoActualizar = "desactualizado";
+    nuevoValor = reporte.desactualizado + 1;
+  }
+
+  const contadorActualizado = await actualizarContadorReporteEnSupabase(
+    idReporte,
+    campoActualizar,
+    nuevoValor
+  );
+
+  if (!contadorActualizado) {
+    return;
+  }
+
+  const esReporteMasReciente =
+    tienda.reportes &&
+    tienda.reportes[0] &&
+    String(tienda.reportes[0].id) === String(idReporte);
+
+  if (tipoVoto === "ya_no_aplica" && esReporteMasReciente && nuevoValor >= 3) {
+    const tiendaActualizada = await actualizarTiendaDesactualizadaEnSupabase(tienda);
+
+    if (!tiendaActualizada) {
+      return;
+    }
+  }
+
+  await cargarTiendasDesdeSupabase();
+
+  if (tipoVoto === "confirmar") {
+    alert("Confirmación guardada en Supabase.");
+  } else {
+    alert("Voto de 'Ya no aplica' guardado en Supabase.");
   }
 }
 
@@ -403,51 +555,11 @@ function alternarHistorial(idTienda) {
 }
 
 function confirmarReporte(idTienda, idReporte) {
-  const tienda = buscarTiendaPorId(idTienda);
-
-  if (!tienda) {
-    alert("No encontramos esa tienda.");
-    return;
-  }
-
-  const reporte = buscarReportePorId(tienda, idReporte);
-
-  if (!reporte) {
-    alert("No encontramos ese reporte.");
-    return;
-  }
-
-  reporte.confirmaciones = reporte.confirmaciones + 1;
-
-  guardarTiendasEnNavegador();
-  mostrarTiendas(tiendas);
-
-  alert("Confirmación guardada solo en pantalla por ahora. En una clase próxima la guardaremos en Supabase.");
+  guardarVotoReporteEnSupabase(idTienda, idReporte, "confirmar");
 }
 
 function marcarReporteDesactualizado(idTienda, idReporte) {
-  const tienda = buscarTiendaPorId(idTienda);
-
-  if (!tienda) {
-    alert("No encontramos esa tienda.");
-    return;
-  }
-
-  const reporte = buscarReportePorId(tienda, idReporte);
-
-  if (!reporte) {
-    alert("No encontramos ese reporte.");
-    return;
-  }
-
-  reporte.desactualizado = reporte.desactualizado + 1;
-
-  actualizarEstadoTiendaSegunConfianza(tienda, reporte);
-
-  guardarTiendasEnNavegador();
-  mostrarTiendas(tiendas);
-
-  alert("Voto guardado solo en pantalla por ahora. En una clase próxima lo guardaremos en Supabase.");
+  guardarVotoReporteEnSupabase(idTienda, idReporte, "ya_no_aplica");
 }
 
 function crearHistorialHTML(tienda) {
