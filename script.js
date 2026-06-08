@@ -1,3 +1,15 @@
+const SUPABASE_URL = "https://ajczyfoyrmrklbeixdum.supabase.coL";
+const SUPABASE_KEY = "sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L";
+
+let supabaseClient = null;
+
+if (
+  SUPABASE_URL !== "https://ajczyfoyrmrklbeixdum.supabase.coL" &&
+  SUPABASE_KEY !== "sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L"
+) {
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+
 let tiendaSeleccionada = null;
 let mapa = null;
 let marcadores = [];
@@ -6,176 +18,7 @@ let ubicacionNuevaTienda = null;
 let marcadorTemporal = null;
 let modoSeleccionUbicacion = false;
 let tiendasConHistorialAbierto = [];
-
-let tiendas = [
-  {
-    id: 1,
-    nombre: "Walmart Navojoa",
-    tipo: "Supermercado",
-    zona: "Navojoa",
-    estado: "no_confirmado",
-    ultimoReporte: "Sin reporte reciente",
-    comentario: "Pendiente de confirmar si tiene cartitas.",
-    lat: 27.0805,
-    lng: -109.4447,
-    fechaUltimoReporteISO: null,
-    reportes: []
-  },
-  {
-    id: 2,
-    nombre: "OXXO Centro",
-    tipo: "OXXO",
-    zona: "Centro",
-    estado: "si_hay",
-    ultimoReporte: "Hace 35 minutos",
-    comentario: "Usuario reportó sobres disponibles en caja.",
-    lat: 27.0712,
-    lng: -109.4439,
-    fechaUltimoReporteISO: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
-    reportes: [
-      {
-        id: generarId(),
-        estado: "si_hay",
-        comentario: "Usuario reportó sobres disponibles en caja.",
-        usuario: "Usuario inicial",
-        fechaISO: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
-        confirmaciones: 0,
-        desactualizado: 0
-      }
-    ]
-  },
-  {
-    id: 3,
-    nombre: "OXXO Sufragio Efectivo",
-    tipo: "OXXO",
-    zona: "Sufragio Efectivo",
-    estado: "se_acabaron",
-    ultimoReporte: "Hace 1 hora",
-    comentario: "Se reportó que ya no quedaban sobres.",
-    lat: 27.0761,
-    lng: -109.4378,
-    fechaUltimoReporteISO: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-    reportes: [
-      {
-        id: generarId(),
-        estado: "se_acabaron",
-        comentario: "Se reportó que ya no quedaban sobres.",
-        usuario: "Usuario inicial",
-        fechaISO: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-        confirmaciones: 0,
-        desactualizado: 0
-      }
-    ]
-  },
-  {
-    id: 4,
-    nombre: "OXXO 16 de Septiembre",
-    tipo: "OXXO",
-    zona: "16 de Septiembre",
-    estado: "proximamente",
-    ultimoReporte: "Hoy",
-    comentario: "Supuestamente llegan más cartitas mañana.",
-    lat: 27.0648,
-    lng: -109.4525,
-    fechaUltimoReporteISO: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-    reportes: [
-      {
-        id: generarId(),
-        estado: "proximamente",
-        comentario: "Supuestamente llegan más cartitas mañana.",
-        usuario: "Usuario inicial",
-        fechaISO: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-        confirmaciones: 0,
-        desactualizado: 0
-      }
-    ]
-  },
-  {
-    id: 5,
-    nombre: "Farmacia Guadalajara",
-    tipo: "Farmacia",
-    zona: "Navojoa",
-    estado: "no_confirmado",
-    ultimoReporte: "Sin reporte reciente",
-    comentario: "Pendiente de revisar disponibilidad.",
-    lat: 27.0742,
-    lng: -109.4465,
-    fechaUltimoReporteISO: null,
-    reportes: []
-  },
-  {
-    id: 6,
-    nombre: "Farmacias Similares",
-    tipo: "Farmacia",
-    zona: "Navojoa",
-    estado: "no_confirmado",
-    ultimoReporte: "Sin reporte reciente",
-    comentario: "Pendiente de revisar disponibilidad.",
-    lat: 27.0682,
-    lng: -109.4408,
-    fechaUltimoReporteISO: null,
-    reportes: []
-  },
-  {
-    id: 7,
-    nombre: "Supermercado Ley",
-    tipo: "Supermercado",
-    zona: "Navojoa",
-    estado: "si_hay",
-    ultimoReporte: "Hace 2 horas",
-    comentario: "Reportaron cartitas cerca de cajas.",
-    lat: 27.0736,
-    lng: -109.4503,
-    fechaUltimoReporteISO: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    reportes: [
-      {
-        id: generarId(),
-        estado: "si_hay",
-        comentario: "Reportaron cartitas cerca de cajas.",
-        usuario: "Usuario inicial",
-        fechaISO: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        confirmaciones: 0,
-        desactualizado: 0
-      }
-    ]
-  },
-  {
-    id: 8,
-    nombre: "Soriana Navojoa",
-    tipo: "Supermercado",
-    zona: "Navojoa",
-    estado: "no_confirmado",
-    ultimoReporte: "Sin reporte reciente",
-    comentario: "Pendiente de confirmar.",
-    lat: 27.0842,
-    lng: -109.4522,
-    fechaUltimoReporteISO: null,
-    reportes: []
-  },
-  {
-    id: 9,
-    nombre: "Abarrotes Don Pepe",
-    tipo: "Abarrotes",
-    zona: "Colonia cercana",
-    estado: "proximamente",
-    ultimoReporte: "Ayer",
-    comentario: "Dijeron que podrían manejar cartitas si hay demanda.",
-    lat: 27.0608,
-    lng: -109.4365,
-    fechaUltimoReporteISO: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
-    reportes: [
-      {
-        id: generarId(),
-        estado: "proximamente",
-        comentario: "Dijeron que podrían manejar cartitas si hay demanda.",
-        usuario: "Usuario inicial",
-        fechaISO: new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString(),
-        confirmaciones: 0,
-        desactualizado: 0
-      }
-    ]
-  }
-];
+let tiendas = [];
 
 function generarId() {
   return Date.now() + Math.floor(Math.random() * 1000);
@@ -183,7 +26,7 @@ function generarId() {
 
 function buscarTiendaPorId(idTienda) {
   return tiendas.find(function(tienda) {
-    return tienda.id === idTienda;
+    return String(tienda.id) === String(idTienda);
   });
 }
 
@@ -193,7 +36,7 @@ function buscarReportePorId(tienda, idReporte) {
   }
 
   return tienda.reportes.find(function(reporte) {
-    return reporte.id === idReporte;
+    return String(reporte.id) === String(idReporte);
   });
 }
 
@@ -225,86 +68,107 @@ function obtenerTiempoRelativo(fechaISO) {
   return "Hace " + diferenciaDias + " día" + (diferenciaDias === 1 ? "" : "s");
 }
 
-function guardarTiendasEnNavegador() {
-  const tiendasConvertidasATexto = JSON.stringify(tiendas);
-  localStorage.setItem("hayCartitasTiendas", tiendasConvertidasATexto);
-}
-
-function cargarTiendasDelNavegador() {
-  const tiendasGuardadas = localStorage.getItem("hayCartitasTiendas");
-
-  if (tiendasGuardadas) {
-    tiendas = JSON.parse(tiendasGuardadas);
-  }
-}
-
-function arreglarDatosViejos() {
-  tiendas.forEach(function(tienda) {
-    if (!tienda.id) {
-      tienda.id = generarId();
-    }
-
-    if (!tienda.lat || !tienda.lng) {
-      tienda.lat = 27.0728 + (Math.random() - 0.5) * 0.03;
-      tienda.lng = -109.4437 + (Math.random() - 0.5) * 0.03;
-    }
-
-    if (!tienda.reportes) {
-      tienda.reportes = [];
-    }
-
-    if (!("fechaUltimoReporteISO" in tienda)) {
-      tienda.fechaUltimoReporteISO = null;
-    }
-
-    tienda.reportes.forEach(function(reporte) {
-      if (!reporte.id) {
-        reporte.id = generarId();
-      }
-
-      if (!reporte.fechaISO) {
-        reporte.fechaISO = new Date().toISOString();
-      }
-
-      if (!("confirmaciones" in reporte)) {
-        reporte.confirmaciones = 0;
-      }
-
-      if (!("desactualizado" in reporte)) {
-        reporte.desactualizado = 0;
-      }
-    });
-
-    if (tienda.reportes.length === 0 && tienda.comentario && tienda.ultimoReporte !== "Sin reporte reciente") {
-      const fechaMigrada = new Date().toISOString();
-
-      tienda.reportes.push({
-        id: generarId(),
-        estado: tienda.estado,
-        comentario: tienda.comentario,
-        usuario: "Reporte anterior",
-        fechaISO: fechaMigrada,
-        confirmaciones: 0,
-        desactualizado: 0
+function convertirDatosDeSupabase(tiendasData, reportesData) {
+  return tiendasData.map(function(tienda) {
+    const reportesDeLaTienda = reportesData
+      .filter(function(reporte) {
+        return String(reporte.tienda_id) === String(tienda.id);
+      })
+      .map(function(reporte) {
+        return {
+          id: reporte.id,
+          estado: reporte.estado,
+          comentario: reporte.comentario || "Reporte sin comentario.",
+          usuario: reporte.usuario || "Usuario anónimo",
+          fechaISO: reporte.created_at,
+          confirmaciones: reporte.confirmaciones || 0,
+          desactualizado: reporte.desactualizado || 0
+        };
       });
 
-      tienda.fechaUltimoReporteISO = fechaMigrada;
-    }
-
-    if (!tienda.fechaUltimoReporteISO && tienda.reportes.length > 0) {
-      tienda.fechaUltimoReporteISO = tienda.reportes[0].fechaISO;
-    }
-
-    tienda.ultimoReporte = obtenerTiempoRelativo(tienda.fechaUltimoReporteISO);
+    return {
+      id: tienda.id,
+      nombre: tienda.nombre,
+      tipo: tienda.tipo,
+      zona: tienda.zona,
+      estado: tienda.estado,
+      ultimoReporte: obtenerTiempoRelativo(tienda.fecha_ultimo_reporte),
+      comentario: tienda.comentario || "Sin comentario.",
+      lat: tienda.lat,
+      lng: tienda.lng,
+      fechaUltimoReporteISO: tienda.fecha_ultimo_reporte,
+      reportes: reportesDeLaTienda
+    };
   });
-
-  guardarTiendasEnNavegador();
 }
 
-function borrarTiendasGuardadas() {
-  localStorage.removeItem("hayCartitasTiendas");
-  alert("Se borraron los datos guardados. Se recargará la página.");
-  location.reload();
+async function cargarTiendasDesdeSupabase() {
+  const contenedor = document.getElementById("lista-tiendas");
+
+  if (contenedor) {
+    contenedor.innerHTML = "<p>Cargando tiendas desde Supabase...</p>";
+  }
+
+  if (!supabaseClient) {
+    if (contenedor) {
+      contenedor.innerHTML = `
+        <p>
+          Falta configurar Supabase. Abre <strong>script.js</strong> y reemplaza
+          <strong>SUPABASE_URL</strong> y <strong>SUPABASE_KEY</strong>.
+        </p>
+      `;
+    }
+
+    return;
+  }
+
+  const resultadoTiendas = await supabaseClient
+    .from("tiendas")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  if (resultadoTiendas.error) {
+    console.error(resultadoTiendas.error);
+
+    if (contenedor) {
+      contenedor.innerHTML = "<p>Error cargando tiendas desde Supabase.</p>";
+    }
+
+    alert("No se pudieron cargar las tiendas desde Supabase.");
+    return;
+  }
+
+  const resultadoReportes = await supabaseClient
+    .from("reportes")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (resultadoReportes.error) {
+    console.error(resultadoReportes.error);
+
+    if (contenedor) {
+      contenedor.innerHTML = "<p>Error cargando reportes desde Supabase.</p>";
+    }
+
+    alert("No se pudieron cargar los reportes desde Supabase.");
+    return;
+  }
+
+  tiendas = convertirDatosDeSupabase(
+    resultadoTiendas.data || [],
+    resultadoReportes.data || []
+  );
+
+  mostrarTiendas(tiendas);
+}
+
+function guardarTiendasEnNavegador() {
+  console.log("Modo Supabase: en esta clase todavía no guardamos cambios en la base de datos.");
+}
+
+async function borrarTiendasGuardadas() {
+  await cargarTiendasDesdeSupabase();
+  alert("Datos recargados desde Supabase.");
 }
 
 function actualizarResumen() {
@@ -334,7 +198,7 @@ function actualizarTiemposDeReportes() {
 }
 
 function actualizarEstadoTiendaSegunConfianza(tienda, reporte) {
-  const esReporteMasReciente = tienda.reportes && tienda.reportes[0] && tienda.reportes[0].id === reporte.id;
+  const esReporteMasReciente = tienda.reportes && tienda.reportes[0] && String(tienda.reportes[0].id) === String(reporte.id);
 
   if (esReporteMasReciente && reporte.desactualizado >= 3) {
     tienda.estado = "no_confirmado";
@@ -482,13 +346,13 @@ function mostrarMarcadores(lista) {
       ${obtenerTextoEstado(tienda.estado)}<br>
       <small>${tienda.zona}</small><br>
       <small>${obtenerTiempoRelativo(tienda.fechaUltimoReporteISO)}</small><br><br>
-      <button onclick="reportarPorId(${tienda.id})">
+      <button onclick="reportarPorId('${tienda.id}')">
         Reportar
       </button>
     `);
 
     marcadores.push(marcador);
-    marcadoresPorTienda[tienda.id] = marcador;
+    marcadoresPorTienda[String(tienda.id)] = marcador;
   });
 }
 
@@ -525,12 +389,14 @@ function obtenerEtiquetaConfianza(reporte) {
 }
 
 function alternarHistorial(idTienda) {
-  if (tiendasConHistorialAbierto.includes(idTienda)) {
+  const idTexto = String(idTienda);
+
+  if (tiendasConHistorialAbierto.includes(idTexto)) {
     tiendasConHistorialAbierto = tiendasConHistorialAbierto.filter(function(id) {
-      return id !== idTienda;
+      return id !== idTexto;
     });
   } else {
-    tiendasConHistorialAbierto.push(idTienda);
+    tiendasConHistorialAbierto.push(idTexto);
   }
 
   mostrarTiendas(tiendas);
@@ -555,6 +421,8 @@ function confirmarReporte(idTienda, idReporte) {
 
   guardarTiendasEnNavegador();
   mostrarTiendas(tiendas);
+
+  alert("Confirmación guardada solo en pantalla por ahora. En la siguiente clase la guardaremos en Supabase.");
 }
 
 function marcarReporteDesactualizado(idTienda, idReporte) {
@@ -578,6 +446,8 @@ function marcarReporteDesactualizado(idTienda, idReporte) {
 
   guardarTiendasEnNavegador();
   mostrarTiendas(tiendas);
+
+  alert("Voto guardado solo en pantalla por ahora. En la siguiente clase lo guardaremos en Supabase.");
 }
 
 function crearHistorialHTML(tienda) {
@@ -590,7 +460,7 @@ function crearHistorialHTML(tienda) {
     `;
   }
 
-  const historialAbierto = tiendasConHistorialAbierto.includes(tienda.id);
+  const historialAbierto = tiendasConHistorialAbierto.includes(String(tienda.id));
   const reportesAMostrar = historialAbierto ? tienda.reportes : tienda.reportes.slice(0, 3);
 
   const listaReportes = reportesAMostrar.map(function(reporte) {
@@ -613,14 +483,14 @@ function crearHistorialHTML(tienda) {
 
           <button 
             class="boton-confirmar-reporte" 
-            onclick="confirmarReporte(${tienda.id}, ${reporte.id})"
+            onclick="confirmarReporte('${tienda.id}', '${reporte.id}')"
           >
             Confirmar
           </button>
 
           <button 
             class="boton-desactualizado-reporte" 
-            onclick="marcarReporteDesactualizado(${tienda.id}, ${reporte.id})"
+            onclick="marcarReporteDesactualizado('${tienda.id}', '${reporte.id}')"
           >
             Ya no aplica
           </button>
@@ -633,7 +503,7 @@ function crearHistorialHTML(tienda) {
 
   if (tienda.reportes.length > 3) {
     botonHistorial = `
-      <button class="boton-historial" onclick="alternarHistorial(${tienda.id})">
+      <button class="boton-historial" onclick="alternarHistorial('${tienda.id}')">
         ${historialAbierto ? "Ver menos reportes" : "Ver todos los reportes"}
       </button>
     `;
@@ -688,19 +558,19 @@ function mostrarTiendas(lista) {
       ${crearHistorialHTML(tienda)}
 
       <div class="botones-tienda">
-        <button class="boton-reporte" onclick="reportarPorId(${tienda.id})">
+        <button class="boton-reporte" onclick="reportarPorId('${tienda.id}')">
           Reportar actualización
         </button>
 
-        <button class="boton-ver-mapa" onclick="verTiendaEnMapa(${tienda.id})">
+        <button class="boton-ver-mapa" onclick="verTiendaEnMapa('${tienda.id}')">
           Ver en mapa
         </button>
 
-        <button class="boton-como-llegar" onclick="abrirComoLlegar(${tienda.id})">
+        <button class="boton-como-llegar" onclick="abrirComoLlegar('${tienda.id}')">
           Cómo llegar
         </button>
 
-        <button class="boton-eliminar" onclick="eliminarTienda(${tienda.id})">
+        <button class="boton-eliminar" onclick="eliminarTienda('${tienda.id}')">
           Eliminar tienda
         </button>
       </div>
@@ -761,9 +631,7 @@ function buscarTiendas() {
 }
 
 function reportarPorId(idTienda) {
-  tiendaSeleccionada = tiendas.find(function(tienda) {
-    return tienda.id === idTienda;
-  });
+  tiendaSeleccionada = buscarTiendaPorId(idTienda);
 
   if (!tiendaSeleccionada) {
     alert("No encontramos esa tienda.");
@@ -833,7 +701,7 @@ function guardarReporte() {
   mostrarTiendas(tiendas);
   cancelarReporte();
 
-  alert("Reporte guardado. Gracias por ayudar a otros coleccionistas.");
+  alert("Reporte guardado solo en pantalla por ahora. En la siguiente clase lo guardaremos en Supabase.");
 }
 
 function cancelarReporte() {
@@ -851,9 +719,7 @@ function cancelarReporte() {
 }
 
 function verTiendaEnMapa(idTienda) {
-  const tienda = tiendas.find(function(tienda) {
-    return tienda.id === idTienda;
-  });
+  const tienda = buscarTiendaPorId(idTienda);
 
   if (!tienda) {
     alert("No encontramos esa tienda.");
@@ -867,7 +733,7 @@ function verTiendaEnMapa(idTienda) {
 
   mapa.setView([tienda.lat, tienda.lng], 16);
 
-  const marcador = marcadoresPorTienda[idTienda];
+  const marcador = marcadoresPorTienda[String(idTienda)];
 
   if (marcador) {
     marcador.openPopup();
@@ -879,9 +745,7 @@ function verTiendaEnMapa(idTienda) {
 }
 
 function abrirComoLlegar(idTienda) {
-  const tienda = tiendas.find(function(tienda) {
-    return tienda.id === idTienda;
-  });
+  const tienda = buscarTiendaPorId(idTienda);
 
   if (!tienda) {
     alert("No encontramos esa tienda.");
@@ -895,33 +759,7 @@ function abrirComoLlegar(idTienda) {
 }
 
 function eliminarTienda(idTienda) {
-  const tienda = tiendas.find(function(tienda) {
-    return tienda.id === idTienda;
-  });
-
-  if (!tienda) {
-    alert("No encontramos esa tienda.");
-    return;
-  }
-
-  const confirmar = confirm("¿Seguro que quieres eliminar esta tienda?\n\n" + tienda.nombre);
-
-  if (!confirmar) {
-    return;
-  }
-
-  tiendas = tiendas.filter(function(tienda) {
-    return tienda.id !== idTienda;
-  });
-
-  tiendasConHistorialAbierto = tiendasConHistorialAbierto.filter(function(id) {
-    return id !== idTienda;
-  });
-
-  guardarTiendasEnNavegador();
-  mostrarTiendas(tiendas);
-
-  alert("Tienda eliminada correctamente.");
+  alert("Por seguridad, borrar tiendas desde la app pública está desactivado en Supabase. Más adelante haremos modo administrador.");
 }
 
 function agregarNuevaTienda() {
@@ -1014,7 +852,7 @@ function agregarNuevaTienda() {
   mostrarTiendas(tiendas);
   limpiarFormularioNuevaTienda();
 
-  alert("Tienda agregada correctamente.");
+  alert("Tienda agregada solo en pantalla por ahora. En la siguiente clase la guardaremos en Supabase.");
 }
 
 function limpiarFormularioNuevaTienda() {
@@ -1044,11 +882,15 @@ function limpiarFormularioNuevaTienda() {
   }
 }
 
-cargarTiendasDelNavegador();
-arreglarDatosViejos();
-iniciarMapa();
-mostrarTiendas(tiendas);
+async function iniciarApp() {
+  iniciarMapa();
+  await cargarTiendasDesdeSupabase();
+}
+
+iniciarApp();
 
 setInterval(function() {
-  mostrarTiendas(tiendas);
+  if (tiendas.length > 0) {
+    mostrarTiendas(tiendas);
+  }
 }, 60000);
