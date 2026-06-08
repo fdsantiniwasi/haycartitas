@@ -24,6 +24,14 @@ function generarId() {
   return Date.now() + Math.floor(Math.random() * 1000);
 }
 
+function actualizarMensajeEstadoApp(mensaje) {
+  const elemento = document.getElementById("mensaje-estado-app");
+
+  if (elemento) {
+    elemento.textContent = mensaje;
+  }
+}
+
 function buscarTiendaPorId(idTienda) {
   return tiendas.find(function(tienda) {
     return String(tienda.id) === String(idTienda);
@@ -120,11 +128,15 @@ function convertirDatosDeSupabase(tiendasData, reportesData) {
 async function cargarTiendasDesdeSupabase() {
   const contenedor = document.getElementById("lista-tiendas");
 
+  actualizarMensajeEstadoApp("Cargando datos desde Supabase...");
+
   if (contenedor) {
     contenedor.innerHTML = "<p>Cargando tiendas desde Supabase...</p>";
   }
 
   if (!supabaseClient) {
+    actualizarMensajeEstadoApp("Falta configurar Supabase en script.js.");
+
     if (contenedor) {
       contenedor.innerHTML = `
         <p>
@@ -144,6 +156,7 @@ async function cargarTiendasDesdeSupabase() {
 
   if (resultadoTiendas.error) {
     console.error(resultadoTiendas.error);
+    actualizarMensajeEstadoApp("Error cargando tiendas desde Supabase.");
 
     if (contenedor) {
       contenedor.innerHTML = "<p>Error cargando tiendas desde Supabase.</p>";
@@ -161,6 +174,7 @@ async function cargarTiendasDesdeSupabase() {
 
   if (resultadoReportes.error) {
     console.error(resultadoReportes.error);
+    actualizarMensajeEstadoApp("Error cargando reportes desde Supabase.");
 
     if (contenedor) {
       contenedor.innerHTML = "<p>Error cargando reportes desde Supabase.</p>";
@@ -176,6 +190,13 @@ async function cargarTiendasDesdeSupabase() {
   );
 
   mostrarTiendas(tiendas);
+
+  actualizarMensajeEstadoApp(
+    "Datos conectados a Supabase. Tiendas: " +
+    tiendas.length +
+    ". Última actualización: " +
+    new Date().toLocaleTimeString()
+  );
 }
 
 function guardarTiendasEnNavegador() {
@@ -184,7 +205,7 @@ function guardarTiendasEnNavegador() {
 
 async function borrarTiendasGuardadas() {
   await cargarTiendasDesdeSupabase();
-  alert("Datos recargados desde Supabase.");
+  alert("Datos actualizados desde Supabase.");
 }
 
 function actualizarResumen() {
@@ -697,10 +718,6 @@ function mostrarTiendas(lista) {
         <button class="boton-como-llegar" onclick="abrirComoLlegar('${tienda.id}')">
           Cómo llegar
         </button>
-
-        <button class="boton-eliminar" onclick="eliminarTienda('${tienda.id}')">
-          Eliminar tienda
-        </button>
       </div>
     `;
 
@@ -902,10 +919,6 @@ function abrirComoLlegar(idTienda) {
     tienda.lat + "," + tienda.lng;
 
   window.open(url, "_blank");
-}
-
-function eliminarTienda(idTienda) {
-  alert("Por seguridad, borrar tiendas desde la app pública está desactivado en Supabase. Más adelante haremos modo administrador.");
 }
 
 async function agregarNuevaTienda() {
