@@ -64,6 +64,70 @@ body {
   color: #856404;
 }
 
+.panel-usuario {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.panel-usuario h2,
+.panel-usuario h3 {
+  margin-top: 0;
+}
+
+.grid-auth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.caja-auth {
+  background: #f8f8f8;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.caja-auth label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.caja-auth input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.caja-auth button {
+  margin-top: 14px;
+}
+
+#zona-sesion-abierta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#zona-sesion-abierta p {
+  margin: 0;
+}
+
+#rol-usuario-activo {
+  color: #666;
+  font-size: 14px;
+  margin-left: 6px;
+}
+
 .resumen {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -242,14 +306,6 @@ button:hover {
   background: #0f5d22;
 }
 
-.boton-eliminar {
-  background: #b00020;
-}
-
-.boton-eliminar:hover {
-  background: #870018;
-}
-
 .boton-historial {
   background: #6c4ab6;
   margin-top: 10px;
@@ -359,7 +415,7 @@ button:hover {
 }
 
 .oculto {
-  display: none;
+  display: none !important;
 }
 
 .nombre-tienda-reporte {
@@ -465,6 +521,10 @@ button:hover {
 @media (max-width: 700px) {
   .resumen {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-auth {
+    grid-template-columns: 1fr;
   }
 
   .encabezado {
