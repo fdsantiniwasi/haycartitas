@@ -33,6 +33,72 @@
       <p id="mensaje-estado-app">Conectando con Supabase...</p>
     </section>
 
+    <section class="panel-usuario">
+      <div id="zona-sesion-cerrada">
+        <h2>Beta testers</h2>
+        <p>Crea una cuenta o inicia sesión para reportar, votar y agregar tiendas.</p>
+
+        <div class="grid-auth">
+          <div class="caja-auth">
+            <h3>Crear cuenta</h3>
+
+            <label for="nombre-registro">Nombre:</label>
+            <input 
+              id="nombre-registro" 
+              type="text" 
+              placeholder="Ejemplo: Fernando"
+            />
+
+            <label for="email-registro">Email:</label>
+            <input 
+              id="email-registro" 
+              type="email" 
+              placeholder="tu@email.com"
+            />
+
+            <label for="password-registro">Contraseña:</label>
+            <input 
+              id="password-registro" 
+              type="password" 
+              placeholder="Mínimo 6 caracteres"
+            />
+
+            <button onclick="crearCuenta()">Crear cuenta beta</button>
+          </div>
+
+          <div class="caja-auth">
+            <h3>Iniciar sesión</h3>
+
+            <label for="email-login">Email:</label>
+            <input 
+              id="email-login" 
+              type="email" 
+              placeholder="tu@email.com"
+            />
+
+            <label for="password-login">Contraseña:</label>
+            <input 
+              id="password-login" 
+              type="password" 
+              placeholder="Tu contraseña"
+            />
+
+            <button onclick="iniciarSesion()">Iniciar sesión</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="zona-sesion-abierta" class="oculto">
+        <p>
+          Sesión iniciada como 
+          <strong id="nombre-usuario-activo">Usuario</strong>
+          <span id="rol-usuario-activo"></span>
+        </p>
+
+        <button class="boton-secundario" onclick="cerrarSesion()">Cerrar sesión</button>
+      </div>
+    </section>
+
     <section class="resumen">
       <div class="tarjeta-resumen">
         <span id="total-tiendas">0</span>
@@ -112,13 +178,6 @@
         placeholder="Ejemplo: Había sobres en caja, se acabaron, llegan mañana..."
       ></textarea>
 
-      <label for="usuario-reporte">Tu nombre, opcional:</label>
-      <input 
-        id="usuario-reporte" 
-        type="text" 
-        placeholder="Ejemplo: Fernando"
-      />
-
       <div class="botones-formulario">
         <button onclick="guardarReporte()">Guardar reporte</button>
         <button class="boton-secundario" onclick="cancelarReporte()">Cancelar</button>
@@ -166,13 +225,6 @@
         id="comentario-nueva-tienda" 
         placeholder="Ejemplo: Me dijeron que llegan mañana, vi sobres en caja, etc."
       ></textarea>
-
-      <label for="usuario-nueva-tienda">Tu nombre, opcional:</label>
-      <input 
-        id="usuario-nueva-tienda" 
-        type="text" 
-        placeholder="Ejemplo: Fernando"
-      />
 
       <div class="caja-ubicacion">
         <p><strong>Ubicación de la tienda:</strong></p>
