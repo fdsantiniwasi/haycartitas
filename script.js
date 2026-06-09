@@ -22,10 +22,6 @@ let modoSeleccionUbicacion = false;
 let tiendasConHistorialAbierto = [];
 let tiendas = [];
 
-function generarId() {
-  return Date.now() + Math.floor(Math.random() * 1000);
-}
-
 function actualizarMensajeEstadoApp(mensaje) {
   const elemento = document.getElementById("mensaje-estado-app");
 
@@ -58,16 +54,18 @@ function obtenerNombreUsuarioActual() {
 function actualizarVistaUsuario() {
   const zonaCerrada = document.getElementById("zona-sesion-cerrada");
   const zonaAbierta = document.getElementById("zona-sesion-abierta");
+  const contenidoApp = document.getElementById("contenido-app");
   const nombreUsuario = document.getElementById("nombre-usuario-activo");
   const rolUsuario = document.getElementById("rol-usuario-activo");
 
-  if (!zonaCerrada || !zonaAbierta) {
+  if (!zonaCerrada || !zonaAbierta || !contenidoApp) {
     return;
   }
 
   if (usuarioActual && perfilActual) {
     zonaCerrada.classList.add("oculto");
     zonaAbierta.classList.remove("oculto");
+    contenidoApp.classList.remove("oculto");
 
     if (nombreUsuario) {
       nombreUsuario.textContent = perfilActual.nombre;
@@ -76,13 +74,52 @@ function actualizarVistaUsuario() {
     if (rolUsuario) {
       rolUsuario.textContent = "· " + perfilActual.rol + " · " + perfilActual.ciudad;
     }
+
+    if (mapa) {
+      setTimeout(function() {
+        mapa.invalidateSize();
+      }, 200);
+    }
   } else {
     zonaCerrada.classList.remove("oculto");
     zonaAbierta.classList.add("oculto");
+    contenidoApp.classList.add("oculto");
   }
 }
 
-async function cargarPerfilActual() {
+async function crearPerfilAutomaticoSiFalta(nombreSugerido) {
+  if (!usuarioActual) {
+    return null;
+  }
+
+  let nombreFinal = nombreSugerido;
+
+  if (!nombreFinal || nombreFinal.trim() === "") {
+    nombreFinal = usuarioActual.email;
+  }
+
+  const resultadoPerfil = await supabaseClient
+    .from("perfiles")
+    .insert({
+      id: usuarioActual.id,
+      nombre: nombreFinal,
+      ciudad: "Navojoa",
+      pais: "México",
+      rol: "usuario",
+      es_beta: true
+    })
+    .select()
+    .single();
+
+  if (resultadoPerfil.error) {
+    console.error(resultadoPerfil.error);
+    return null;
+  }
+
+  return resultadoPerfil.data;
+}
+
+async function cargarPerfilActual(nombreSugerido) {
   if (!usuarioActual) {
     perfilActual = null;
     actualizarVistaUsuario();
@@ -103,7 +140,18 @@ async function cargarPerfilActual() {
     return;
   }
 
-  perfilActual = resultadoPerfil.data;
+  if (!resultadoPerfil.data) {
+    perfilActual = await crearPerfilAutomaticoSiFalta(nombreSugerido);
+
+    if (!perfilActual) {
+      actualizarVistaUsuario();
+      alert("Tu sesión existe, pero no se pudo crear tu perfil beta.");
+      return;
+    }
+  } else {
+    perfilActual = resultadoPerfil.data;
+  }
+
   actualizarVistaUsuario();
 }
 
@@ -178,32 +226,12 @@ async function crearCuenta() {
 
   usuarioActual = resultadoRegistro.data.user;
 
-  const resultadoPerfil = await supabaseClient
-    .from("perfiles")
-    .insert({
-      id: usuarioActual.id,
-      nombre: nombre,
-      ciudad: "Navojoa",
-      pais: "México",
-      rol: "usuario",
-      es_beta: true
-    })
-    .select()
-    .single();
-
-  if (resultadoPerfil.error) {
-    console.error(resultadoPerfil.error);
-    alert("La cuenta se creó, pero no se pudo crear el perfil.");
-    return;
-  }
-
-  perfilActual = resultadoPerfil.data;
+  await cargarPerfilActual(nombre);
 
   nombreInput.value = "";
   emailInput.value = "";
   passwordInput.value = "";
 
-  actualizarVistaUsuario();
   await cargarTiendasDesdeSupabase();
 
   alert("Cuenta beta creada correctamente.");
@@ -244,7 +272,12 @@ async function iniciarSesion() {
 
   usuarioActual = resultadoLogin.data.user;
 
-  await cargarPerfilActual();
+  await cargarPerfilActual(email);
+
+  if (!perfilActual) {
+    alert("Iniciaste sesión, pero no se pudo cargar tu perfil.");
+    return;
+  }
 
   emailInput.value = "";
   passwordInput.value = "";
@@ -269,7 +302,10 @@ async function cerrarSesion() {
 
   usuarioActual = null;
   perfilActual = null;
+  tiendas = [];
+
   actualizarVistaUsuario();
+  actualizarMensajeEstadoApp("Sesión cerrada. Inicia sesión para entrar a la beta.");
 
   alert("Sesión cerrada.");
 }
@@ -370,25 +406,16 @@ function convertirDatosDeSupabase(tiendasData, reportesData) {
 async function cargarTiendasDesdeSupabase() {
   const contenedor = document.getElementById("lista-tiendas");
 
+  if (!usuarioActual || !perfilActual) {
+    actualizarMensajeEstadoApp("Inicia sesión para entrar a la beta local.");
+    actualizarVistaUsuario();
+    return;
+  }
+
   actualizarMensajeEstadoApp("Cargando datos desde Supabase...");
 
   if (contenedor) {
     contenedor.innerHTML = "<p>Cargando tiendas desde Supabase...</p>";
-  }
-
-  if (!supabaseClient) {
-    actualizarMensajeEstadoApp("Falta configurar Supabase en script.js.");
-
-    if (contenedor) {
-      contenedor.innerHTML = `
-        <p>
-          Falta configurar Supabase. Abre <strong>script.js</strong> y reemplaza
-          <strong>SUPABASE_URL</strong> y <strong>SUPABASE_KEY</strong>.
-        </p>
-      `;
-    }
-
-    return;
   }
 
   const resultadoTiendas = await supabaseClient
@@ -434,15 +461,11 @@ async function cargarTiendasDesdeSupabase() {
   mostrarTiendas(tiendas);
 
   actualizarMensajeEstadoApp(
-    "Datos conectados a Supabase. Tiendas: " +
+    "Beta conectada. Tiendas: " +
     tiendas.length +
     ". Última actualización: " +
     new Date().toLocaleTimeString()
   );
-}
-
-function guardarTiendasEnNavegador() {
-  console.log("Modo Supabase: ya no usamos localStorage para guardar tiendas.");
 }
 
 async function borrarTiendasGuardadas() {
@@ -1273,12 +1296,22 @@ function limpiarFormularioNuevaTienda() {
 
 async function iniciarApp() {
   iniciarMapa();
+  actualizarVistaUsuario();
   await cargarUsuarioActual();
-  await cargarTiendasDesdeSupabase();
+
+  if (usuarioActual && perfilActual) {
+    await cargarTiendasDesdeSupabase();
+  } else {
+    actualizarMensajeEstadoApp("Inicia sesión para entrar a la beta local.");
+  }
 
   if (supabaseClient) {
     supabaseClient.auth.onAuthStateChange(async function() {
       await cargarUsuarioActual();
+
+      if (usuarioActual && perfilActual) {
+        await cargarTiendasDesdeSupabase();
+      }
     });
   }
 }
@@ -1286,7 +1319,7 @@ async function iniciarApp() {
 iniciarApp();
 
 setInterval(function() {
-  if (tiendas.length > 0) {
+  if (usuarioActual && perfilActual && tiendas.length > 0) {
     mostrarTiendas(tiendas);
   }
 }, 60000);
