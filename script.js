@@ -10,6 +10,8 @@ if (
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
+let usuarioActual = null;
+let perfilActual = null;
 let tiendaSeleccionada = null;
 let mapa = null;
 let marcadores = [];
@@ -30,6 +32,246 @@ function actualizarMensajeEstadoApp(mensaje) {
   if (elemento) {
     elemento.textContent = mensaje;
   }
+}
+
+function usuarioDebeEstarConectado() {
+  if (!usuarioActual || !perfilActual) {
+    alert("Para hacer esta acción necesitas crear cuenta o iniciar sesión.");
+    return false;
+  }
+
+  return true;
+}
+
+function obtenerNombreUsuarioActual() {
+  if (perfilActual && perfilActual.nombre) {
+    return perfilActual.nombre;
+  }
+
+  if (usuarioActual && usuarioActual.email) {
+    return usuarioActual.email;
+  }
+
+  return "Usuario beta";
+}
+
+function actualizarVistaUsuario() {
+  const zonaCerrada = document.getElementById("zona-sesion-cerrada");
+  const zonaAbierta = document.getElementById("zona-sesion-abierta");
+  const nombreUsuario = document.getElementById("nombre-usuario-activo");
+  const rolUsuario = document.getElementById("rol-usuario-activo");
+
+  if (!zonaCerrada || !zonaAbierta) {
+    return;
+  }
+
+  if (usuarioActual && perfilActual) {
+    zonaCerrada.classList.add("oculto");
+    zonaAbierta.classList.remove("oculto");
+
+    if (nombreUsuario) {
+      nombreUsuario.textContent = perfilActual.nombre;
+    }
+
+    if (rolUsuario) {
+      rolUsuario.textContent = "· " + perfilActual.rol + " · " + perfilActual.ciudad;
+    }
+  } else {
+    zonaCerrada.classList.remove("oculto");
+    zonaAbierta.classList.add("oculto");
+  }
+}
+
+async function cargarPerfilActual() {
+  if (!usuarioActual) {
+    perfilActual = null;
+    actualizarVistaUsuario();
+    return;
+  }
+
+  const resultadoPerfil = await supabaseClient
+    .from("perfiles")
+    .select("*")
+    .eq("id", usuarioActual.id)
+    .maybeSingle();
+
+  if (resultadoPerfil.error) {
+    console.error(resultadoPerfil.error);
+    perfilActual = null;
+    actualizarVistaUsuario();
+    alert("No se pudo cargar el perfil del usuario.");
+    return;
+  }
+
+  perfilActual = resultadoPerfil.data;
+  actualizarVistaUsuario();
+}
+
+async function cargarUsuarioActual() {
+  if (!supabaseClient) {
+    return;
+  }
+
+  const resultadoUsuario = await supabaseClient.auth.getUser();
+
+  if (resultadoUsuario.error) {
+    usuarioActual = null;
+    perfilActual = null;
+    actualizarVistaUsuario();
+    return;
+  }
+
+  usuarioActual = resultadoUsuario.data.user;
+
+  if (usuarioActual) {
+    await cargarPerfilActual();
+  } else {
+    perfilActual = null;
+    actualizarVistaUsuario();
+  }
+}
+
+async function crearCuenta() {
+  if (!supabaseClient) {
+    alert("Supabase no está configurado.");
+    return;
+  }
+
+  const nombreInput = document.getElementById("nombre-registro");
+  const emailInput = document.getElementById("email-registro");
+  const passwordInput = document.getElementById("password-registro");
+
+  const nombre = nombreInput.value.trim();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+
+  if (nombre === "") {
+    alert("Escribe tu nombre.");
+    return;
+  }
+
+  if (email === "") {
+    alert("Escribe tu email.");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("La contraseña debe tener mínimo 6 caracteres.");
+    return;
+  }
+
+  const resultadoRegistro = await supabaseClient.auth.signUp({
+    email: email,
+    password: password
+  });
+
+  if (resultadoRegistro.error) {
+    console.error(resultadoRegistro.error);
+    alert("No se pudo crear la cuenta: " + resultadoRegistro.error.message);
+    return;
+  }
+
+  if (!resultadoRegistro.data.session) {
+    alert("Cuenta creada. Revisa tu correo para confirmar la cuenta antes de iniciar sesión.");
+    return;
+  }
+
+  usuarioActual = resultadoRegistro.data.user;
+
+  const resultadoPerfil = await supabaseClient
+    .from("perfiles")
+    .insert({
+      id: usuarioActual.id,
+      nombre: nombre,
+      ciudad: "Navojoa",
+      pais: "México",
+      rol: "usuario",
+      es_beta: true
+    })
+    .select()
+    .single();
+
+  if (resultadoPerfil.error) {
+    console.error(resultadoPerfil.error);
+    alert("La cuenta se creó, pero no se pudo crear el perfil.");
+    return;
+  }
+
+  perfilActual = resultadoPerfil.data;
+
+  nombreInput.value = "";
+  emailInput.value = "";
+  passwordInput.value = "";
+
+  actualizarVistaUsuario();
+  await cargarTiendasDesdeSupabase();
+
+  alert("Cuenta beta creada correctamente.");
+}
+
+async function iniciarSesion() {
+  if (!supabaseClient) {
+    alert("Supabase no está configurado.");
+    return;
+  }
+
+  const emailInput = document.getElementById("email-login");
+  const passwordInput = document.getElementById("password-login");
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+
+  if (email === "") {
+    alert("Escribe tu email.");
+    return;
+  }
+
+  if (password === "") {
+    alert("Escribe tu contraseña.");
+    return;
+  }
+
+  const resultadoLogin = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (resultadoLogin.error) {
+    console.error(resultadoLogin.error);
+    alert("No se pudo iniciar sesión: " + resultadoLogin.error.message);
+    return;
+  }
+
+  usuarioActual = resultadoLogin.data.user;
+
+  await cargarPerfilActual();
+
+  emailInput.value = "";
+  passwordInput.value = "";
+
+  await cargarTiendasDesdeSupabase();
+
+  alert("Sesión iniciada correctamente.");
+}
+
+async function cerrarSesion() {
+  if (!supabaseClient) {
+    return;
+  }
+
+  const resultado = await supabaseClient.auth.signOut();
+
+  if (resultado.error) {
+    console.error(resultado.error);
+    alert("No se pudo cerrar sesión.");
+    return;
+  }
+
+  usuarioActual = null;
+  perfilActual = null;
+  actualizarVistaUsuario();
+
+  alert("Sesión cerrada.");
 }
 
 function buscarTiendaPorId(idTienda) {
@@ -234,22 +476,6 @@ function actualizarTiemposDeReportes() {
   });
 }
 
-function pedirNombreParaVotar() {
-  const nombre = prompt("Escribe tu nombre para registrar tu voto:");
-
-  if (!nombre) {
-    return null;
-  }
-
-  const nombreLimpio = nombre.trim();
-
-  if (nombreLimpio === "") {
-    return null;
-  }
-
-  return nombreLimpio;
-}
-
 function detectarErrorDeVotoDuplicado(error) {
   if (!error) {
     return false;
@@ -306,8 +532,7 @@ async function actualizarTiendaDesactualizadaEnSupabase(tienda) {
 }
 
 async function guardarVotoReporteEnSupabase(idTienda, idReporte, tipoVoto) {
-  if (!supabaseClient) {
-    alert("Supabase no está configurado.");
+  if (!usuarioDebeEstarConectado()) {
     return;
   }
 
@@ -325,18 +550,12 @@ async function guardarVotoReporteEnSupabase(idTienda, idReporte, tipoVoto) {
     return;
   }
 
-  const usuarioNombre = pedirNombreParaVotar();
-
-  if (!usuarioNombre) {
-    alert("Para votar necesitas escribir tu nombre.");
-    return;
-  }
-
   const resultadoVoto = await supabaseClient
     .from("votos_reportes")
     .insert({
       reporte_id: idReporte,
-      usuario_nombre: usuarioNombre,
+      usuario_id: usuarioActual.id,
+      usuario_nombre: obtenerNombreUsuarioActual(),
       tipo_voto: tipoVoto
     });
 
@@ -344,7 +563,7 @@ async function guardarVotoReporteEnSupabase(idTienda, idReporte, tipoVoto) {
     console.error(resultadoVoto.error);
 
     if (detectarErrorDeVotoDuplicado(resultadoVoto.error)) {
-      alert("Ese nombre ya votó en este reporte. Cada nombre solo puede votar una vez por reporte.");
+      alert("Ya votaste en este reporte. Cada usuario solo puede votar una vez por reporte.");
       return;
     }
 
@@ -453,6 +672,10 @@ function iniciarMapa() {
 }
 
 function activarSeleccionUbicacion() {
+  if (!usuarioDebeEstarConectado()) {
+    return;
+  }
+
   modoSeleccionUbicacion = true;
 
   const textoUbicacion = document.getElementById("ubicacion-seleccionada");
@@ -776,6 +999,10 @@ function buscarTiendas() {
 }
 
 function reportarPorId(idTienda) {
+  if (!usuarioDebeEstarConectado()) {
+    return;
+  }
+
   tiendaSeleccionada = buscarTiendaPorId(idTienda);
 
   if (!tiendaSeleccionada) {
@@ -786,7 +1013,6 @@ function reportarPorId(idTienda) {
   document.getElementById("nombre-tienda-reporte").textContent = tiendaSeleccionada.nombre;
   document.getElementById("estado-reporte").value = tiendaSeleccionada.estado;
   document.getElementById("comentario-reporte").value = "";
-  document.getElementById("usuario-reporte").value = "";
 
   document.getElementById("formulario-reporte").classList.remove("oculto");
 
@@ -796,19 +1022,17 @@ function reportarPorId(idTienda) {
 }
 
 async function guardarReporte() {
+  if (!usuarioDebeEstarConectado()) {
+    return;
+  }
+
   if (!tiendaSeleccionada) {
     alert("Primero selecciona una tienda.");
     return;
   }
 
-  if (!supabaseClient) {
-    alert("Supabase no está configurado.");
-    return;
-  }
-
   const nuevoEstado = document.getElementById("estado-reporte").value;
   const nuevoComentario = document.getElementById("comentario-reporte").value.trim();
-  const usuario = document.getElementById("usuario-reporte").value.trim();
 
   let comentarioFinal = "";
 
@@ -818,21 +1042,16 @@ async function guardarReporte() {
     comentarioFinal = "Reporte actualizado sin comentario.";
   }
 
-  let usuarioFinal = "Usuario anónimo";
-
-  if (usuario !== "") {
-    usuarioFinal = usuario;
-  }
-
   const fechaReporte = new Date().toISOString();
 
   const resultadoReporte = await supabaseClient
     .from("reportes")
     .insert({
       tienda_id: tiendaSeleccionada.id,
+      usuario_id: usuarioActual.id,
       estado: nuevoEstado,
       comentario: comentarioFinal,
-      usuario: usuarioFinal,
+      usuario: obtenerNombreUsuarioActual(),
       confirmaciones: 0,
       desactualizado: 0,
       created_at: fechaReporte
@@ -878,7 +1097,6 @@ function cancelarReporte() {
 
   document.getElementById("nombre-tienda-reporte").textContent = "";
   document.getElementById("comentario-reporte").value = "";
-  document.getElementById("usuario-reporte").value = "";
 }
 
 function verTiendaEnMapa(idTienda) {
@@ -922,19 +1140,17 @@ function abrirComoLlegar(idTienda) {
 }
 
 async function agregarNuevaTienda() {
+  if (!usuarioDebeEstarConectado()) {
+    return;
+  }
+
   const nombreInput = document.getElementById("nombre-nueva-tienda");
   const tipoInput = document.getElementById("tipo-nueva-tienda");
   const zonaInput = document.getElementById("zona-nueva-tienda");
   const estadoInput = document.getElementById("estado-nueva-tienda");
   const comentarioInput = document.getElementById("comentario-nueva-tienda");
-  const usuarioInput = document.getElementById("usuario-nueva-tienda");
 
-  if (!supabaseClient) {
-    alert("Supabase no está configurado.");
-    return;
-  }
-
-  if (!nombreInput || !tipoInput || !zonaInput || !estadoInput || !comentarioInput || !usuarioInput) {
+  if (!nombreInput || !tipoInput || !zonaInput || !estadoInput || !comentarioInput) {
     alert("Hay un problema: falta un campo del formulario en el HTML.");
     return;
   }
@@ -944,7 +1160,6 @@ async function agregarNuevaTienda() {
   const zona = zonaInput.value.trim();
   const estado = estadoInput.value;
   const comentario = comentarioInput.value.trim();
-  const usuario = usuarioInput.value.trim();
 
   if (nombre === "") {
     alert("Escribe el nombre de la tienda.");
@@ -978,12 +1193,6 @@ async function agregarNuevaTienda() {
     comentarioFinal = "Tienda agregada por la comunidad.";
   }
 
-  let usuarioFinal = "Usuario anónimo";
-
-  if (usuario !== "") {
-    usuarioFinal = usuario;
-  }
-
   const fechaActual = new Date().toISOString();
 
   const resultadoTienda = await supabaseClient
@@ -997,7 +1206,8 @@ async function agregarNuevaTienda() {
       lat: ubicacionNuevaTienda.lat,
       lng: ubicacionNuevaTienda.lng,
       fecha_ultimo_reporte: fechaActual,
-      created_at: fechaActual
+      created_at: fechaActual,
+      creado_por: usuarioActual.id
     })
     .select()
     .single();
@@ -1014,9 +1224,10 @@ async function agregarNuevaTienda() {
     .from("reportes")
     .insert({
       tienda_id: nuevaTienda.id,
+      usuario_id: usuarioActual.id,
       estado: estado,
       comentario: comentarioFinal,
-      usuario: usuarioFinal,
+      usuario: obtenerNombreUsuarioActual(),
       confirmaciones: 0,
       desactualizado: 0,
       created_at: fechaActual
@@ -1040,7 +1251,6 @@ function limpiarFormularioNuevaTienda() {
   document.getElementById("zona-nueva-tienda").value = "";
   document.getElementById("estado-nueva-tienda").value = "no_confirmado";
   document.getElementById("comentario-nueva-tienda").value = "";
-  document.getElementById("usuario-nueva-tienda").value = "";
 
   ubicacionNuevaTienda = null;
   modoSeleccionUbicacion = false;
@@ -1063,7 +1273,14 @@ function limpiarFormularioNuevaTienda() {
 
 async function iniciarApp() {
   iniciarMapa();
+  await cargarUsuarioActual();
   await cargarTiendasDesdeSupabase();
+
+  if (supabaseClient) {
+    supabaseClient.auth.onAuthStateChange(async function() {
+      await cargarUsuarioActual();
+    });
+  }
 }
 
 iniciarApp();
