@@ -102,6 +102,49 @@
     </section>
 
     <section id="contenido-app" class="oculto">
+      <section class="panel-beta">
+        <h2>Panel de beta testing</h2>
+        <p>
+          Gracias por probar Hay Cartitas. En esta etapa queremos detectar errores,
+          tiendas faltantes y partes confusas de la app.
+        </p>
+
+        <div class="grid-beta">
+          <div class="caja-beta">
+            <h3>Qué probar</h3>
+            <ul>
+              <li>Buscar una tienda.</li>
+              <li>Reportar si hay o no hay cartitas.</li>
+              <li>Confirmar reportes de otros usuarios.</li>
+              <li>Marcar reportes que ya no aplican.</li>
+              <li>Agregar una tienda nueva.</li>
+              <li>Probar la app desde celular.</li>
+            </ul>
+          </div>
+
+          <div class="caja-beta">
+            <h3>Reportar bug o idea</h3>
+
+            <label for="tipo-feedback">Tipo:</label>
+            <select id="tipo-feedback">
+              <option value="bug">Bug / error</option>
+              <option value="idea">Idea</option>
+              <option value="experiencia">Algo confuso</option>
+              <option value="tienda_faltante">Tienda faltante</option>
+              <option value="otro">Otro</option>
+            </select>
+
+            <label for="mensaje-feedback">Mensaje:</label>
+            <textarea 
+              id="mensaje-feedback"
+              placeholder="Ejemplo: Al agregar tienda me perdí en el mapa, o falta tal OXXO..."
+            ></textarea>
+
+            <button onclick="guardarFeedbackBeta()">Enviar feedback</button>
+          </div>
+        </div>
+      </section>
+
       <section class="resumen">
         <div class="tarjeta-resumen">
           <span id="total-tiendas">0</span>
