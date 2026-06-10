@@ -183,7 +183,25 @@
           Reportes confiables
         </button>
 
+        <button class="boton-ubicacion" onclick="usarMiUbicacion()">
+          Usar mi ubicación
+        </button>
+
+        <button class="boton-secundario" onclick="activarFiltroCercanas()">
+          Tiendas a 10 km
+        </button>
+
+        <button class="boton-secundario" onclick="quitarFiltroCercanas()">
+          Quitar filtro 10 km
+        </button>
+
         <button class="boton-secundario" onclick="borrarTiendasGuardadas()">Actualizar datos</button>
+      </section>
+
+      <section class="estado-filtro">
+        <p id="mensaje-filtro-distancia">
+          Filtro cercano activo: buscando tu ubicación.
+        </p>
       </section>
 
       <section class="busqueda">
@@ -287,6 +305,12 @@
       </section>
     </section>
   </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
+</body>
+</html>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
