@@ -64,7 +64,8 @@ body {
   color: #856404;
 }
 
-.panel-usuario {
+.panel-usuario,
+.panel-beta {
   background: white;
   border-radius: 18px;
   padding: 20px;
@@ -73,31 +74,39 @@ body {
 }
 
 .panel-usuario h2,
-.panel-usuario h3 {
+.panel-usuario h3,
+.panel-beta h2,
+.panel-beta h3 {
   margin-top: 0;
 }
 
-.grid-auth {
+.grid-auth,
+.grid-beta {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
   margin-top: 14px;
 }
 
-.caja-auth {
+.caja-auth,
+.caja-beta {
   background: #f8f8f8;
   border-radius: 14px;
   padding: 16px;
 }
 
-.caja-auth label {
+.caja-auth label,
+.caja-beta label {
   display: block;
   margin-top: 12px;
   margin-bottom: 5px;
   font-weight: bold;
 }
 
-.caja-auth input {
+.caja-auth input,
+.caja-beta input,
+.caja-beta select,
+.caja-beta textarea {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
@@ -106,8 +115,23 @@ body {
   box-sizing: border-box;
 }
 
-.caja-auth button {
+.caja-beta textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.caja-auth button,
+.caja-beta button {
   margin-top: 14px;
+}
+
+.caja-beta ul {
+  margin-bottom: 0;
+  padding-left: 20px;
+}
+
+.caja-beta li {
+  margin-bottom: 8px;
 }
 
 #zona-sesion-abierta {
@@ -523,7 +547,8 @@ button:hover {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .grid-auth {
+  .grid-auth,
+  .grid-beta {
     grid-template-columns: 1fr;
   }
 
@@ -547,4 +572,5 @@ button:hover {
   .mapa {
     height: 360px;
   }
+}
 }
