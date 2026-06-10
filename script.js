@@ -687,6 +687,17 @@ function iniciarMapa() {
     if (mapa) {
       mapa.scrollWheelZoom.enable();
     }
+
+    const formularioAgregar = document.getElementById("formulario-agregar");
+
+    if (formularioAgregar) {
+      setTimeout(function() {
+        formularioAgregar.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }, 600);
+    }
   });
 
   setTimeout(function() {
@@ -710,7 +721,8 @@ function activarSeleccionUbicacion() {
   if (mapa) {
     mapa.scrollWheelZoom.disable();
     mapa.getContainer().scrollIntoView({
-      behavior: "smooth"
+      behavior: "smooth",
+      block: "center"
     });
   }
 }
