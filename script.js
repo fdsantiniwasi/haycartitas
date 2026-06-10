@@ -1,6 +1,8 @@
 const SUPABASE_URL = "https://ajczyfoyrmrklbeixdum.supabase.co";
 const SUPABASE_KEY = "sb_publishable_30cWHLbp6e5CK7JsAoVvjw_yvKjj42L";
 
+const RADIO_FILTRO_KM = 10;
+
 let supabaseClient = null;
 
 if (
@@ -16,11 +18,16 @@ let tiendaSeleccionada = null;
 let mapa = null;
 let marcadores = [];
 let marcadoresPorTienda = {};
+let marcadorUsuario = null;
+let ubicacionUsuario = null;
 let ubicacionNuevaTienda = null;
 let marcadorTemporal = null;
 let modoSeleccionUbicacion = false;
+let filtroCercanasActivo = true;
 let tiendasConHistorialAbierto = [];
 let tiendas = [];
+let filtroEstadoActual = "todas";
+let filtroBusquedaActual = "";
 
 function actualizarMensajeEstadoApp(mensaje) {
   const elemento = document.getElementById("mensaje-estado-app");
@@ -28,6 +35,26 @@ function actualizarMensajeEstadoApp(mensaje) {
   if (elemento) {
     elemento.textContent = mensaje;
   }
+}
+
+function actualizarMensajeFiltroDistancia() {
+  const elemento = document.getElementById("mensaje-filtro-distancia");
+
+  if (!elemento) {
+    return;
+  }
+
+  if (!filtroCercanasActivo) {
+    elemento.textContent = "Filtro de distancia desactivado. Mostrando todas las tiendas.";
+    return;
+  }
+
+  if (!ubicacionUsuario) {
+    elemento.textContent = "Filtro cercano activo. Presiona “Usar mi ubicación” para mostrar tiendas a 10 km.";
+    return;
+  }
+
+  elemento.textContent = "Mostrando tiendas a " + RADIO_FILTRO_KM + " km de tu ubicación.";
 }
 
 function usuarioDebeEstarConectado() {
@@ -85,6 +112,8 @@ function actualizarVistaUsuario() {
     zonaAbierta.classList.add("oculto");
     contenidoApp.classList.add("oculto");
   }
+
+  actualizarMensajeFiltroDistancia();
 }
 
 async function crearPerfilAutomaticoSiFalta(nombreSugerido) {
@@ -233,6 +262,7 @@ async function crearCuenta() {
   passwordInput.value = "";
 
   await cargarTiendasDesdeSupabase();
+  intentarActivarUbicacionInicial();
 
   alert("Cuenta beta creada correctamente.");
 }
@@ -283,6 +313,7 @@ async function iniciarSesion() {
   passwordInput.value = "";
 
   await cargarTiendasDesdeSupabase();
+  intentarActivarUbicacionInicial();
 
   alert("Sesión iniciada correctamente.");
 }
@@ -303,6 +334,12 @@ async function cerrarSesion() {
   usuarioActual = null;
   perfilActual = null;
   tiendas = [];
+  ubicacionUsuario = null;
+
+  if (marcadorUsuario && mapa) {
+    mapa.removeLayer(marcadorUsuario);
+    marcadorUsuario = null;
+  }
 
   actualizarVistaUsuario();
   actualizarMensajeEstadoApp("Sesión cerrada. Inicia sesión para entrar a la beta.");
@@ -397,6 +434,104 @@ function obtenerTiempoRelativo(fechaISO) {
   return "Hace " + diferenciaDias + " día" + (diferenciaDias === 1 ? "" : "s");
 }
 
+function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
+  const radioTierraKm = 6371;
+  const diferenciaLat = convertirGradosARadianes(lat2 - lat1);
+  const diferenciaLng = convertirGradosARadianes(lng2 - lng1);
+
+  const a =
+    Math.sin(diferenciaLat / 2) * Math.sin(diferenciaLat / 2) +
+    Math.cos(convertirGradosARadianes(lat1)) *
+      Math.cos(convertirGradosARadianes(lat2)) *
+      Math.sin(diferenciaLng / 2) *
+      Math.sin(diferenciaLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return radioTierraKm * c;
+}
+
+function convertirGradosARadianes(grados) {
+  return grados * (Math.PI / 180);
+}
+
+function formatearDistancia(distanciaKm) {
+  if (distanciaKm === null || distanciaKm === undefined) {
+    return "Distancia no disponible";
+  }
+
+  if (distanciaKm < 1) {
+    return Math.round(distanciaKm * 1000) + " m de ti";
+  }
+
+  return distanciaKm.toFixed(1) + " km de ti";
+}
+
+function actualizarDistanciasDeTiendas() {
+  tiendas.forEach(function(tienda) {
+    if (!ubicacionUsuario || !tienda.lat || !tienda.lng) {
+      tienda.distanciaKm = null;
+      return;
+    }
+
+    tienda.distanciaKm = calcularDistanciaKm(
+      ubicacionUsuario.lat,
+      ubicacionUsuario.lng,
+      tienda.lat,
+      tienda.lng
+    );
+  });
+}
+
+function ordenarTiendasPorDistancia(lista) {
+  if (!ubicacionUsuario) {
+    return lista;
+  }
+
+  return lista.slice().sort(function(a, b) {
+    if (a.distanciaKm === null || a.distanciaKm === undefined) {
+      return 1;
+    }
+
+    if (b.distanciaKm === null || b.distanciaKm === undefined) {
+      return -1;
+    }
+
+    return a.distanciaKm - b.distanciaKm;
+  });
+}
+
+function aplicarFiltrosActuales() {
+  let resultado = tiendas.slice();
+
+  if (filtroEstadoActual !== "todas") {
+    resultado = resultado.filter(function(tienda) {
+      return tienda.estado === filtroEstadoActual;
+    });
+  }
+
+  if (filtroBusquedaActual !== "") {
+    resultado = resultado.filter(function(tienda) {
+      return (
+        tienda.nombre.toLowerCase().includes(filtroBusquedaActual) ||
+        tienda.tipo.toLowerCase().includes(filtroBusquedaActual) ||
+        tienda.zona.toLowerCase().includes(filtroBusquedaActual) ||
+        tienda.estado.toLowerCase().includes(filtroBusquedaActual)
+      );
+    });
+  }
+
+  if (filtroCercanasActivo && ubicacionUsuario) {
+    resultado = resultado.filter(function(tienda) {
+      return tienda.distanciaKm !== null && tienda.distanciaKm <= RADIO_FILTRO_KM;
+    });
+  }
+
+  resultado = ordenarTiendasPorDistancia(resultado);
+
+  mostrarTiendas(resultado);
+}
+
 function ordenarReportes(reportes) {
   return reportes.sort(function(a, b) {
     const fechaA = new Date(a.fechaISO || a.created_at || 0).getTime();
@@ -441,6 +576,7 @@ function convertirDatosDeSupabase(tiendasData, reportesData) {
       lat: tienda.lat,
       lng: tienda.lng,
       fechaUltimoReporteISO: tienda.fecha_ultimo_reporte,
+      distanciaKm: null,
       reportes: reportesDeLaTienda
     };
   });
@@ -501,7 +637,8 @@ async function cargarTiendasDesdeSupabase() {
     resultadoReportes.data || []
   );
 
-  mostrarTiendas(tiendas);
+  actualizarDistanciasDeTiendas();
+  aplicarFiltrosActuales();
 
   actualizarMensajeEstadoApp(
     "Beta conectada. Tiendas: " +
@@ -509,6 +646,8 @@ async function cargarTiendasDesdeSupabase() {
     ". Última actualización: " +
     new Date().toLocaleTimeString()
   );
+
+  actualizarMensajeFiltroDistancia();
 }
 
 async function borrarTiendasGuardadas() {
@@ -748,6 +887,134 @@ function iniciarMapa() {
   }, 300);
 }
 
+function crearIconoUsuario() {
+  return L.divIcon({
+    className: "marcador-personalizado",
+    html: `<div class="pin pin-user"></div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12]
+  });
+}
+
+function mostrarUbicacionUsuarioEnMapa() {
+  if (!mapa || !ubicacionUsuario) {
+    return;
+  }
+
+  if (marcadorUsuario) {
+    mapa.removeLayer(marcadorUsuario);
+  }
+
+  marcadorUsuario = L.marker([ubicacionUsuario.lat, ubicacionUsuario.lng], {
+    icon: crearIconoUsuario()
+  }).addTo(mapa);
+
+  marcadorUsuario.bindPopup("Estás aquí");
+
+  mapa.setView([ubicacionUsuario.lat, ubicacionUsuario.lng], 14);
+}
+
+function usarMiUbicacion() {
+  if (!usuarioDebeEstarConectado()) {
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    alert("Tu navegador no permite usar ubicación.");
+    return;
+  }
+
+  actualizarMensajeFiltroDistancia("Buscando tu ubicación...");
+
+  navigator.geolocation.getCurrentPosition(
+    function(posicion) {
+      ubicacionUsuario = {
+        lat: posicion.coords.latitude,
+        lng: posicion.coords.longitude
+      };
+
+      filtroCercanasActivo = true;
+
+      mostrarUbicacionUsuarioEnMapa();
+      actualizarDistanciasDeTiendas();
+      aplicarFiltrosActuales();
+      actualizarMensajeFiltroDistancia();
+
+      alert("Ubicación activada. Mostrando tiendas cercanas a 10 km.");
+    },
+    function(error) {
+      console.error(error);
+      ubicacionUsuario = null;
+      actualizarMensajeFiltroDistancia();
+      alert("No se pudo obtener tu ubicación. Puedes revisar permisos del navegador o quitar el filtro de 10 km.");
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000
+    }
+  );
+}
+
+function intentarActivarUbicacionInicial() {
+  if (!usuarioActual || !perfilActual) {
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    filtroCercanasActivo = false;
+    actualizarMensajeFiltroDistancia();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(posicion) {
+      ubicacionUsuario = {
+        lat: posicion.coords.latitude,
+        lng: posicion.coords.longitude
+      };
+
+      filtroCercanasActivo = true;
+
+      mostrarUbicacionUsuarioEnMapa();
+      actualizarDistanciasDeTiendas();
+      aplicarFiltrosActuales();
+      actualizarMensajeFiltroDistancia();
+    },
+    function(error) {
+      console.warn("Ubicación no disponible o permiso rechazado.", error);
+      ubicacionUsuario = null;
+      actualizarMensajeFiltroDistancia();
+      aplicarFiltrosActuales();
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 60000
+    }
+  );
+}
+
+function activarFiltroCercanas() {
+  filtroCercanasActivo = true;
+
+  if (!ubicacionUsuario) {
+    usarMiUbicacion();
+    return;
+  }
+
+  actualizarDistanciasDeTiendas();
+  aplicarFiltrosActuales();
+  actualizarMensajeFiltroDistancia();
+}
+
+function quitarFiltroCercanas() {
+  filtroCercanasActivo = false;
+  aplicarFiltrosActuales();
+  actualizarMensajeFiltroDistancia();
+}
+
 function activarSeleccionUbicacion() {
   if (!usuarioDebeEstarConectado()) {
     return;
@@ -827,6 +1094,10 @@ function mostrarMarcadores(lista) {
       return;
     }
 
+    const textoDistancia = ubicacionUsuario && tienda.distanciaKm !== null
+      ? "<br><small>" + formatearDistancia(tienda.distanciaKm) + "</small>"
+      : "";
+
     const marcador = L.marker([tienda.lat, tienda.lng], {
       icon: crearIcono(tienda.estado)
     }).addTo(mapa);
@@ -835,7 +1106,8 @@ function mostrarMarcadores(lista) {
       <strong>${tienda.nombre}</strong><br>
       ${obtenerTextoEstado(tienda.estado)}<br>
       <small>${tienda.zona}</small><br>
-      <small>${obtenerTiempoRelativo(tienda.fechaUltimoReporteISO)}</small><br><br>
+      <small>${obtenerTiempoRelativo(tienda.fechaUltimoReporteISO)}</small>
+      ${textoDistancia}<br><br>
       <button onclick="reportarPorId('${tienda.id}')">
         Reportar
       </button>
@@ -889,7 +1161,7 @@ function alternarHistorial(idTienda) {
     tiendasConHistorialAbierto.push(idTexto);
   }
 
-  mostrarTiendas(tiendas);
+  aplicarFiltrosActuales();
 }
 
 function confirmarReporte(idTienda, idReporte) {
@@ -984,7 +1256,12 @@ function mostrarTiendas(lista) {
   contenedor.innerHTML = "";
 
   if (lista.length === 0) {
-    contenedor.innerHTML = "<p>No encontramos tiendas con esa búsqueda.</p>";
+    if (filtroCercanasActivo && ubicacionUsuario) {
+      contenedor.innerHTML = "<p>No encontramos tiendas dentro de 10 km. Puedes quitar el filtro de distancia.</p>";
+    } else {
+      contenedor.innerHTML = "<p>No encontramos tiendas con esa búsqueda.</p>";
+    }
+
     mostrarMarcadores([]);
     return;
   }
@@ -992,6 +1269,10 @@ function mostrarTiendas(lista) {
   lista.forEach(function(tienda) {
     const tarjeta = document.createElement("div");
     tarjeta.className = "tarjeta-tienda";
+
+    const textoDistancia = ubicacionUsuario && tienda.distanciaKm !== null
+      ? `<p class="distancia-tienda"><strong>Distancia:</strong> ${formatearDistancia(tienda.distanciaKm)}</p>`
+      : "";
 
     tarjeta.innerHTML = `
       <span class="estado ${tienda.estado}">
@@ -1002,6 +1283,7 @@ function mostrarTiendas(lista) {
 
       <p><strong>Tipo:</strong> ${tienda.tipo}</p>
       <p><strong>Zona:</strong> ${tienda.zona}</p>
+      ${textoDistancia}
       <p><strong>Último reporte:</strong> ${obtenerTiempoRelativo(tienda.fechaUltimoReporteISO)}</p>
       <p><strong>Comentario actual:</strong> ${tienda.comentario}</p>
 
@@ -1029,19 +1311,25 @@ function mostrarTiendas(lista) {
 }
 
 function mostrarTodas() {
-  mostrarTiendas(tiendas);
+  filtroEstadoActual = "todas";
+  filtroBusquedaActual = "";
+
+  const buscador = document.getElementById("buscador");
+
+  if (buscador) {
+    buscador.value = "";
+  }
+
+  aplicarFiltrosActuales();
 }
 
 function filtrarTiendas(estado) {
-  const tiendasFiltradas = tiendas.filter(function(tienda) {
-    return tienda.estado === estado;
-  });
-
-  mostrarTiendas(tiendasFiltradas);
+  filtroEstadoActual = estado;
+  aplicarFiltrosActuales();
 }
 
 function filtrarTiendasConReportesConfiables() {
-  const tiendasConfiables = tiendas.filter(function(tienda) {
+  let tiendasConfiables = tiendas.filter(function(tienda) {
     if (!tienda.reportes) {
       return false;
     }
@@ -1050,6 +1338,14 @@ function filtrarTiendasConReportesConfiables() {
       return reporte.confirmaciones >= 3 && reporte.desactualizado < 3;
     });
   });
+
+  if (filtroCercanasActivo && ubicacionUsuario) {
+    tiendasConfiables = tiendasConfiables.filter(function(tienda) {
+      return tienda.distanciaKm !== null && tienda.distanciaKm <= RADIO_FILTRO_KM;
+    });
+  }
+
+  tiendasConfiables = ordenarTiendasPorDistancia(tiendasConfiables);
 
   mostrarTiendas(tiendasConfiables);
 }
@@ -1062,18 +1358,8 @@ function buscarTiendas() {
     return;
   }
 
-  const texto = buscador.value.toLowerCase();
-
-  const resultado = tiendas.filter(function(tienda) {
-    return (
-      tienda.nombre.toLowerCase().includes(texto) ||
-      tienda.tipo.toLowerCase().includes(texto) ||
-      tienda.zona.toLowerCase().includes(texto) ||
-      tienda.estado.toLowerCase().includes(texto)
-    );
-  });
-
-  mostrarTiendas(resultado);
+  filtroBusquedaActual = buscador.value.toLowerCase();
+  aplicarFiltrosActuales();
 }
 
 function reportarPorId(idTienda) {
@@ -1352,10 +1638,12 @@ function limpiarFormularioNuevaTienda() {
 async function iniciarApp() {
   iniciarMapa();
   actualizarVistaUsuario();
+  actualizarMensajeFiltroDistancia();
   await cargarUsuarioActual();
 
   if (usuarioActual && perfilActual) {
     await cargarTiendasDesdeSupabase();
+    intentarActivarUbicacionInicial();
   } else {
     actualizarMensajeEstadoApp("Inicia sesión para entrar a la beta local.");
   }
@@ -1366,6 +1654,7 @@ async function iniciarApp() {
 
       if (usuarioActual && perfilActual) {
         await cargarTiendasDesdeSupabase();
+        intentarActivarUbicacionInicial();
       }
     });
   }
@@ -1375,6 +1664,7 @@ iniciarApp();
 
 setInterval(function() {
   if (usuarioActual && perfilActual && tiendas.length > 0) {
-    mostrarTiendas(tiendas);
+    actualizarDistanciasDeTiendas();
+    aplicarFiltrosActuales();
   }
 }, 60000);
