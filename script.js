@@ -310,6 +310,49 @@ async function cerrarSesion() {
   alert("Sesión cerrada.");
 }
 
+async function guardarFeedbackBeta() {
+  if (!usuarioDebeEstarConectado()) {
+    return;
+  }
+
+  const tipoInput = document.getElementById("tipo-feedback");
+  const mensajeInput = document.getElementById("mensaje-feedback");
+
+  if (!tipoInput || !mensajeInput) {
+    alert("Falta el formulario de feedback en el HTML.");
+    return;
+  }
+
+  const tipo = tipoInput.value;
+  const mensaje = mensajeInput.value.trim();
+
+  if (mensaje === "") {
+    alert("Escribe el bug, idea o comentario antes de enviarlo.");
+    return;
+  }
+
+  const resultado = await supabaseClient
+    .from("feedback_beta")
+    .insert({
+      usuario_id: usuarioActual.id,
+      nombre_usuario: obtenerNombreUsuarioActual(),
+      tipo: tipo,
+      mensaje: mensaje,
+      pagina: "app principal"
+    });
+
+  if (resultado.error) {
+    console.error(resultado.error);
+    alert("No se pudo guardar el feedback en Supabase.");
+    return;
+  }
+
+  mensajeInput.value = "";
+  tipoInput.value = "bug";
+
+  alert("Gracias. Tu feedback quedó guardado.");
+}
+
 function buscarTiendaPorId(idTienda) {
   return tiendas.find(function(tienda) {
     return String(tienda.id) === String(idTienda);
