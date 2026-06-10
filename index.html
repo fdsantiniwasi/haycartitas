@@ -152,41 +152,6 @@
         />
       </section>
 
-      <section>
-        <h2>Mapa de tiendas en Navojoa</h2>
-        <div id="mapa" class="mapa"></div>
-      </section>
-
-      <section>
-        <h2>Tiendas en Navojoa</h2>
-        <div id="lista-tiendas" class="lista-tiendas"></div>
-      </section>
-
-      <section id="formulario-reporte" class="formulario-reporte oculto">
-        <h2>Reportar disponibilidad</h2>
-
-        <p id="nombre-tienda-reporte" class="nombre-tienda-reporte"></p>
-
-        <label for="estado-reporte">Estado:</label>
-        <select id="estado-reporte">
-          <option value="si_hay">Sí hay</option>
-          <option value="se_acabaron">Se acabaron</option>
-          <option value="no_confirmado">No confirmado</option>
-          <option value="proximamente">Próximamente</option>
-        </select>
-
-        <label for="comentario-reporte">Comentario:</label>
-        <textarea 
-          id="comentario-reporte" 
-          placeholder="Ejemplo: Había sobres en caja, se acabaron, llegan mañana..."
-        ></textarea>
-
-        <div class="botones-formulario">
-          <button onclick="guardarReporte()">Guardar reporte</button>
-          <button class="boton-secundario" onclick="cancelarReporte()">Cancelar</button>
-        </div>
-      </section>
-
       <section id="formulario-agregar" class="formulario-agregar">
         <h2>Agregar tienda nueva</h2>
 
@@ -242,14 +207,43 @@
 
         <button onclick="agregarNuevaTienda()">Agregar tienda</button>
       </section>
+
+      <section>
+        <h2>Mapa de tiendas en Navojoa</h2>
+        <div id="mapa" class="mapa"></div>
+      </section>
+
+      <section>
+        <h2>Tiendas en Navojoa</h2>
+        <div id="lista-tiendas" class="lista-tiendas"></div>
+      </section>
+
+      <section id="formulario-reporte" class="formulario-reporte oculto">
+        <h2>Reportar disponibilidad</h2>
+
+        <p id="nombre-tienda-reporte" class="nombre-tienda-reporte"></p>
+
+        <label for="estado-reporte">Estado:</label>
+        <select id="estado-reporte">
+          <option value="si_hay">Sí hay</option>
+          <option value="se_acabaron">Se acabaron</option>
+          <option value="no_confirmado">No confirmado</option>
+          <option value="proximamente">Próximamente</option>
+        </select>
+
+        <label for="comentario-reporte">Comentario:</label>
+        <textarea 
+          id="comentario-reporte" 
+          placeholder="Ejemplo: Había sobres en caja, se acabaron, llegan mañana..."
+        ></textarea>
+
+        <div class="botones-formulario">
+          <button onclick="guardarReporte()">Guardar reporte</button>
+          <button class="boton-secundario" onclick="cancelarReporte()">Cancelar</button>
+        </div>
+      </section>
     </section>
   </main>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="script.js"></script>
-</body>
-</html>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
