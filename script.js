@@ -57,6 +57,83 @@ function actualizarMensajeFiltroDistancia() {
   elemento.textContent = "Mostrando tiendas a " + RADIO_FILTRO_KM + " km de tu ubicación.";
 }
 
+function alternarGuiaBeta() {
+  const guiaBeta = document.getElementById("guia-beta");
+
+  if (!guiaBeta) {
+    return;
+  }
+
+  guiaBeta.classList.toggle("oculto");
+}
+
+function alternarFeedbackBeta() {
+  const formularioFeedback = document.getElementById("formulario-feedback-beta");
+
+  if (!formularioFeedback) {
+    return;
+  }
+
+  formularioFeedback.classList.toggle("oculto");
+
+  if (!formularioFeedback.classList.contains("oculto")) {
+    formularioFeedback.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function ocultarFeedbackBeta() {
+  const formularioFeedback = document.getElementById("formulario-feedback-beta");
+
+  if (formularioFeedback) {
+    formularioFeedback.classList.add("oculto");
+  }
+}
+
+function alternarFormularioAgregar() {
+  const formularioAgregar = document.getElementById("formulario-agregar");
+
+  if (!formularioAgregar) {
+    return;
+  }
+
+  formularioAgregar.classList.toggle("oculto");
+
+  if (!formularioAgregar.classList.contains("oculto")) {
+    formularioAgregar.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+function mostrarFormularioAgregar() {
+  const formularioAgregar = document.getElementById("formulario-agregar");
+
+  if (!formularioAgregar) {
+    return;
+  }
+
+  formularioAgregar.classList.remove("oculto");
+
+  formularioAgregar.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
+function ocultarFormularioAgregar() {
+  limpiarFormularioNuevaTienda();
+
+  const formularioAgregar = document.getElementById("formulario-agregar");
+
+  if (formularioAgregar) {
+    formularioAgregar.classList.add("oculto");
+  }
+}
+
 function usuarioDebeEstarConectado() {
   if (!usuarioActual || !perfilActual) {
     alert("Para hacer esta acción necesitas crear cuenta o iniciar sesión.");
@@ -386,6 +463,7 @@ async function guardarFeedbackBeta() {
 
   mensajeInput.value = "";
   tipoInput.value = "bug";
+  ocultarFeedbackBeta();
 
   alert("Gracias. Tu feedback quedó guardado.");
 }
@@ -870,16 +948,7 @@ function iniciarMapa() {
       mapa.scrollWheelZoom.enable();
     }
 
-    const formularioAgregar = document.getElementById("formulario-agregar");
-
-    if (formularioAgregar) {
-      setTimeout(function() {
-        formularioAgregar.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      }, 600);
-    }
+    mostrarFormularioAgregar();
   });
 
   setTimeout(function() {
@@ -1605,6 +1674,12 @@ async function agregarNuevaTienda() {
 
   await cargarTiendasDesdeSupabase();
   limpiarFormularioNuevaTienda();
+
+  const formularioAgregar = document.getElementById("formulario-agregar");
+
+  if (formularioAgregar) {
+    formularioAgregar.classList.add("oculto");
+  }
 
   alert("Tienda nueva guardada correctamente en Supabase.");
 }
