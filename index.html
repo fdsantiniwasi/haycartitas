@@ -105,42 +105,50 @@
       <section class="panel-beta">
         <h2>Panel de beta testing</h2>
         <p>
-          Gracias por probar Hay Cartitas. En esta etapa queremos detectar errores,
-          tiendas faltantes y partes confusas de la app.
+          Prueba la app, reporta tiendas reales y avísanos si algo falla o se siente confuso.
         </p>
 
-        <div class="grid-beta">
-          <div class="caja-beta">
-            <h3>Qué probar</h3>
-            <ul>
-              <li>Buscar una tienda.</li>
-              <li>Reportar si hay o no hay cartitas.</li>
-              <li>Confirmar reportes de otros usuarios.</li>
-              <li>Marcar reportes que ya no aplican.</li>
-              <li>Agregar una tienda nueva.</li>
-              <li>Probar la app desde celular.</li>
-            </ul>
-          </div>
+        <div class="acciones">
+          <button onclick="alternarGuiaBeta()">Ver qué probar</button>
 
-          <div class="caja-beta">
-            <h3>Reportar bug o idea</h3>
+          <button class="boton-confiables" onclick="alternarFeedbackBeta()">
+            Reportar bug o idea
+          </button>
+        </div>
 
-            <label for="tipo-feedback">Tipo:</label>
-            <select id="tipo-feedback">
-              <option value="bug">Bug / error</option>
-              <option value="idea">Idea</option>
-              <option value="experiencia">Algo confuso</option>
-              <option value="tienda_faltante">Tienda faltante</option>
-              <option value="otro">Otro</option>
-            </select>
+        <div id="guia-beta" class="caja-beta oculto">
+          <h3>Qué probar</h3>
+          <ul>
+            <li>Buscar una tienda.</li>
+            <li>Reportar si hay o no hay cartitas.</li>
+            <li>Confirmar reportes de otros usuarios.</li>
+            <li>Marcar reportes que ya no aplican.</li>
+            <li>Agregar una tienda nueva.</li>
+            <li>Probar la app desde celular.</li>
+          </ul>
+        </div>
 
-            <label for="mensaje-feedback">Mensaje:</label>
-            <textarea 
-              id="mensaje-feedback"
-              placeholder="Ejemplo: Al agregar tienda me perdí en el mapa, o falta tal OXXO..."
-            ></textarea>
+        <div id="formulario-feedback-beta" class="caja-beta oculto">
+          <h3>Reportar bug o idea</h3>
 
+          <label for="tipo-feedback">Tipo:</label>
+          <select id="tipo-feedback">
+            <option value="bug">Bug / error</option>
+            <option value="idea">Idea</option>
+            <option value="experiencia">Algo confuso</option>
+            <option value="tienda_faltante">Tienda faltante</option>
+            <option value="otro">Otro</option>
+          </select>
+
+          <label for="mensaje-feedback">Mensaje:</label>
+          <textarea 
+            id="mensaje-feedback"
+            placeholder="Ejemplo: Al agregar tienda me perdí en el mapa, o falta tal OXXO..."
+          ></textarea>
+
+          <div class="botones-formulario">
             <button onclick="guardarFeedbackBeta()">Enviar feedback</button>
+            <button class="boton-secundario" onclick="ocultarFeedbackBeta()">Cancelar</button>
           </div>
         </div>
       </section>
@@ -195,6 +203,10 @@
           Quitar filtro 10 km
         </button>
 
+        <button class="boton-mapa" onclick="alternarFormularioAgregar()">
+          Agregar tienda
+        </button>
+
         <button class="boton-secundario" onclick="borrarTiendasGuardadas()">Actualizar datos</button>
       </section>
 
@@ -213,7 +225,7 @@
         />
       </section>
 
-      <section id="formulario-agregar" class="formulario-agregar">
+      <section id="formulario-agregar" class="formulario-agregar oculto">
         <h2>Agregar tienda nueva</h2>
 
         <label for="nombre-nueva-tienda">Nombre de la tienda:</label>
@@ -266,7 +278,10 @@
           <p id="ubicacion-seleccionada">Todavía no has seleccionado ubicación.</p>
         </div>
 
-        <button onclick="agregarNuevaTienda()">Agregar tienda</button>
+        <div class="botones-formulario">
+          <button onclick="agregarNuevaTienda()">Agregar tienda</button>
+          <button class="boton-secundario" onclick="ocultarFormularioAgregar()">Cancelar</button>
+        </div>
       </section>
 
       <section>
@@ -305,12 +320,6 @@
       </section>
     </section>
   </main>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="script.js"></script>
-</body>
-</html>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
